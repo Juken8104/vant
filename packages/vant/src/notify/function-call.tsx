@@ -1,16 +1,9 @@
-import { App } from 'vue';
-import {
-  extend,
-  isObject,
-  inBrowser,
-  withInstall,
-  ComponentInstance,
-} from '../utils';
+import { extend, isObject, inBrowser, type ComponentInstance } from '../utils';
 import { mountComponent, usePopupState } from '../utils/mount-component';
 import VanNotify from './Notify';
 import type { NotifyMessage, NotifyOptions } from './types';
 
-let timer: number;
+let timer: ReturnType<typeof setTimeout>;
 let instance: ComponentInstance;
 
 const parseOptions = (message: NotifyMessage | NotifyOptions) =>
@@ -25,27 +18,6 @@ function initInstance() {
   }));
 }
 
-function Notify(options: NotifyMessage | NotifyOptions) {
-  if (!inBrowser) {
-    return;
-  }
-
-  if (!instance) {
-    initInstance();
-  }
-
-  options = extend({}, Notify.currentOptions, parseOptions(options));
-
-  instance.open(options);
-  clearTimeout(timer);
-
-  if (options.duration! > 0) {
-    timer = window.setTimeout(Notify.clear, options.duration);
-  }
-
-  return instance;
-}
-
 const getDefaultOptions = (): NotifyOptions => ({
   type: 'danger',
   color: undefined,
@@ -54,32 +26,56 @@ const getDefaultOptions = (): NotifyOptions => ({
   onClick: undefined,
   onOpened: undefined,
   duration: 3000,
+  position: undefined,
   className: '',
   lockScroll: false,
   background: undefined,
 });
 
-Notify.clear = () => {
+let currentOptions = getDefaultOptions();
+
+/**
+ * Close the currently displayed Notify
+ */
+export const closeNotify = () => {
   if (instance) {
     instance.toggle(false);
   }
 };
 
-Notify.currentOptions = getDefaultOptions();
+/**
+ * Display Notify at the top of the page
+ */
+export function showNotify(options: NotifyMessage | NotifyOptions) {
+  if (!inBrowser) {
+    return;
+  }
 
-Notify.setDefaultOptions = (options: NotifyOptions) => {
-  extend(Notify.currentOptions, options);
+  if (!instance) {
+    initInstance();
+  }
+
+  options = extend({}, currentOptions, parseOptions(options));
+
+  instance.open(options);
+  clearTimeout(timer);
+
+  if (options.duration! > 0) {
+    timer = setTimeout(closeNotify, options.duration);
+  }
+
+  return instance;
+}
+
+/**
+ * Modify the default configuration, affecting all `showNotify` calls
+ */
+export const setNotifyDefaultOptions = (options: NotifyOptions) =>
+  extend(currentOptions, options);
+
+/**
+ * Reset the default configuration, affecting all `showNotify` calls
+ */
+export const resetNotifyDefaultOptions = () => {
+  currentOptions = getDefaultOptions();
 };
-
-Notify.resetDefaultOptions = () => {
-  Notify.currentOptions = getDefaultOptions();
-};
-
-Notify.Component = withInstall(VanNotify);
-
-Notify.install = (app: App) => {
-  app.use(Notify.Component);
-  app.config.globalProperties.$notify = Notify;
-};
-
-export { Notify };

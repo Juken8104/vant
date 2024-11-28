@@ -1,29 +1,31 @@
 import {
   ref,
   reactive,
-  PropType,
   defineComponent,
-  ExtractPropTypes,
+  onBeforeUnmount,
+  type PropType,
+  type ExtractPropTypes,
+  nextTick,
 } from 'vue';
 
 // Utils
 import {
   pick,
   extend,
+  toArray,
   isPromise,
   truthProp,
-  numericProp,
   Interceptor,
   getSizeStyle,
   makeArrayProp,
   makeStringProp,
   makeNumericProp,
-  ComponentInstance,
+  type Numeric,
+  type ComponentInstance,
 } from '../utils';
 import {
   bem,
   name,
-  toArray,
   isOversize,
   filterFiles,
   isImageFile,
@@ -36,7 +38,7 @@ import { useExpose } from '../composables/use-expose';
 
 // Components
 import { Icon } from '../icon';
-import { ImagePreview, ImagePreviewOptions } from '../image-preview';
+import { showImagePreview, type ImagePreviewOptions } from '../image-preview';
 import UploaderPreviewItem from './UploaderPreviewItem';
 
 // Types
@@ -50,7 +52,7 @@ import type {
   UploaderFileListItem,
 } from './types';
 
-const props = {
+export const uploaderProps = {
   name: makeNumericProp(''),
   accept: makeStringProp('image/*'),
   capture: String,
@@ -64,14 +66,17 @@ const props = {
   uploadIcon: makeStringProp('photograph'),
   uploadText: String,
   deletable: truthProp,
+  reupload: Boolean,
   afterRead: Function as PropType<UploaderAfterRead>,
   showUpload: truthProp,
   modelValue: makeArrayProp<UploaderFileListItem>(),
   beforeRead: Function as PropType<UploaderBeforeRead>,
   beforeDelete: Function as PropType<Interceptor>,
-  previewSize: numericProp,
+  previewSize: [Number, String, Array] as PropType<
+    Numeric | [Numeric, Numeric]
+  >,
   previewImage: truthProp,
-  previewOptions: Object as PropType<ImagePreviewOptions>,
+  previewOptions: Object as PropType<Partial<ImagePreviewOptions>>,
   previewFullImage: truthProp,
   maxSize: {
     type: [Number, String, Function] as PropType<UploaderMaxSize>,
@@ -79,24 +84,28 @@ const props = {
   },
 };
 
-export type UploaderProps = ExtractPropTypes<typeof props>;
+export type UploaderProps = ExtractPropTypes<typeof uploaderProps>;
 
 export default defineComponent({
   name,
 
-  props,
+  props: uploaderProps,
 
   emits: [
     'delete',
     'oversize',
-    'click-upload',
-    'close-preview',
-    'click-preview',
+    'clickUpload',
+    'closePreview',
+    'clickPreview',
+    'clickReupload',
     'update:modelValue',
   ],
 
   setup(props, { emit, slots }) {
     const inputRef = ref();
+    const urls: string[] = [];
+    const reuploadIndex = ref(-1);
+    const isReuploading = ref(false);
 
     const getDetail = (index = props.modelValue.length) => ({
       name: props.name,
@@ -110,7 +119,7 @@ export default defineComponent({
     };
 
     const onAfterRead = (
-      items: UploaderFileListItem | UploaderFileListItem[]
+      items: UploaderFileListItem | UploaderFileListItem[],
     ) => {
       resetInput();
 
@@ -129,7 +138,14 @@ export default defineComponent({
         }
       }
       items = reactive(items);
-      emit('update:modelValue', [...props.modelValue, ...toArray(items)]);
+      if (reuploadIndex.value > -1) {
+        const arr = [...props.modelValue];
+        arr.splice(reuploadIndex.value, 1, items as UploaderFileListItem);
+        emit('update:modelValue', arr);
+        reuploadIndex.value = -1;
+      } else {
+        emit('update:modelValue', [...props.modelValue, ...toArray(items)]);
+      }
 
       if (props.afterRead) {
         props.afterRead(items, getDetail());
@@ -147,13 +163,14 @@ export default defineComponent({
         }
 
         Promise.all(
-          files.map((file) => readFileContent(file, resultType))
+          files.map((file) => readFileContent(file, resultType)),
         ).then((contents) => {
           const fileList = (files as File[]).map((file, index) => {
             const result: UploaderFileListItem = {
               file,
               status: '',
               message: '',
+              objectUrl: URL.createObjectURL(file),
             };
 
             if (contents[index]) {
@@ -171,6 +188,7 @@ export default defineComponent({
             file: files as File,
             status: '',
             message: '',
+            objectUrl: URL.createObjectURL(files as File),
           };
 
           if (content) {
@@ -219,24 +237,30 @@ export default defineComponent({
 
     let imagePreview: ComponentInstance | undefined;
 
-    const onClosePreview = () => emit('close-preview');
+    const onClosePreview = () => emit('closePreview');
 
     const previewImage = (item: UploaderFileListItem) => {
       if (props.previewFullImage) {
         const imageFiles = props.modelValue.filter(isImageFile);
         const images = imageFiles
-          .map((item) => item.content || item.url)
+          .map((item) => {
+            if (item.objectUrl && !item.url && item.status !== 'failed') {
+              item.url = item.objectUrl;
+              urls.push(item.url);
+            }
+            return item.url;
+          })
           .filter(Boolean) as string[];
 
-        imagePreview = ImagePreview(
+        imagePreview = showImagePreview(
           extend(
             {
               images,
               startPosition: imageFiles.indexOf(item),
               onClose: onClosePreview,
             },
-            props.previewOptions
-          )
+            props.previewOptions,
+          ),
         );
       }
     };
@@ -255,27 +279,48 @@ export default defineComponent({
       emit('delete', item, getDetail(index));
     };
 
+    const reuploadFile = (index: number) => {
+      isReuploading.value = true;
+      reuploadIndex.value = index;
+      nextTick(() => chooseFile());
+    };
+
+    const onInputClick = () => {
+      if (!isReuploading.value) {
+        reuploadIndex.value = -1;
+      }
+      isReuploading.value = false;
+    };
+
     const renderPreviewItem = (item: UploaderFileListItem, index: number) => {
       const needPickData = [
         'imageFit',
         'deletable',
+        'reupload',
         'previewSize',
         'beforeDelete',
       ] as const;
 
       const previewData = extend(
         pick(props, needPickData),
-        pick(item, needPickData, true)
+        pick(item, needPickData, true),
       );
 
       return (
         <UploaderPreviewItem
-          v-slots={{ 'preview-cover': slots['preview-cover'] }}
+          v-slots={pick(slots, ['preview-cover', 'preview-delete'])}
           item={item}
           index={index}
-          onClick={() => emit('click-preview', item, getDetail(index))}
+          onClick={() =>
+            emit(
+              props.reupload ? 'clickReupload' : 'clickPreview',
+              item,
+              getDetail(index),
+            )
+          }
           onDelete={() => deleteFile(item, index)}
           onPreview={() => previewImage(item)}
+          onReupload={() => reuploadFile(index)}
           {...pick(props, ['name', 'lazyLoad'])}
           {...previewData}
         />
@@ -288,12 +333,10 @@ export default defineComponent({
       }
     };
 
-    const onClickUpload = (event: MouseEvent) => emit('click-upload', event);
+    const onClickUpload = (event: MouseEvent) => emit('clickUpload', event);
 
     const renderUpload = () => {
-      if (props.modelValue.length >= props.maxCount || !props.showUpload) {
-        return;
-      }
+      const lessThanMax = props.modelValue.length < +props.maxCount;
 
       const Input = props.readonly ? null : (
         <input
@@ -302,15 +345,20 @@ export default defineComponent({
           class={bem('input')}
           accept={props.accept}
           capture={props.capture as unknown as boolean}
-          multiple={props.multiple}
+          multiple={props.multiple && reuploadIndex.value === -1}
           disabled={props.disabled}
           onChange={onChange}
+          onClick={onInputClick}
         />
       );
 
       if (slots.default) {
         return (
-          <div class={bem('input-wrapper')} onClick={onClickUpload}>
+          <div
+            v-show={lessThanMax}
+            class={bem('input-wrapper')}
+            onClick={onClickUpload}
+          >
             {slots.default()}
             {Input}
           </div>
@@ -319,6 +367,7 @@ export default defineComponent({
 
       return (
         <div
+          v-show={props.showUpload && lessThanMax}
           class={bem('upload', { readonly: props.readonly })}
           style={getSizeStyle(props.previewSize)}
           onClick={onClickUpload}
@@ -338,8 +387,13 @@ export default defineComponent({
       }
     };
 
+    onBeforeUnmount(() => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    });
+
     useExpose<UploaderExpose>({
       chooseFile,
+      reuploadFile,
       closeImagePreview,
     });
     useCustomFieldValue(() => props.modelValue);

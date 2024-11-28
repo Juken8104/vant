@@ -1,10 +1,10 @@
 import {
   ref,
   computed,
-  InjectionKey,
-  CSSProperties,
   defineComponent,
-  ExtractPropTypes,
+  type InjectionKey,
+  type CSSProperties,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -12,13 +12,17 @@ import {
   isDef,
   truthProp,
   numericProp,
+  windowHeight,
   makeStringProp,
   makeNumericProp,
   createNamespace,
-  ComponentInstance,
+  HAPTICS_FEEDBACK,
+  type ComponentInstance,
 } from '../utils';
 
 // Composables
+import { useId } from '../composables/use-id';
+import { useExpose } from '../composables/use-expose';
 import {
   useRect,
   useChildren,
@@ -32,26 +36,29 @@ import type { DropdownMenuProvide, DropdownMenuDirection } from './types';
 
 const [name, bem] = createNamespace('dropdown-menu');
 
-const props = {
+export const dropdownMenuProps = {
   overlay: truthProp,
   zIndex: numericProp,
   duration: makeNumericProp(0.2),
   direction: makeStringProp<DropdownMenuDirection>('down'),
   activeColor: String,
+  autoLocate: Boolean,
   closeOnClickOutside: truthProp,
   closeOnClickOverlay: truthProp,
+  swipeThreshold: numericProp,
 };
 
-export type DropdownMenuProps = ExtractPropTypes<typeof props>;
+export type DropdownMenuProps = ExtractPropTypes<typeof dropdownMenuProps>;
 
 export const DROPDOWN_KEY: InjectionKey<DropdownMenuProvide> = Symbol(name);
 
 export default defineComponent({
   name,
 
-  props,
+  props: dropdownMenuProps,
 
   setup(props, { slots }) {
+    const id = useId();
     const root = ref<HTMLElement>();
     const barRef = ref<HTMLElement>();
     const offset = ref(0);
@@ -60,7 +67,11 @@ export default defineComponent({
     const scrollParent = useScrollParent(root);
 
     const opened = computed(() =>
-      children.some((item) => item.state.showWrapper)
+      children.some((item) => item.state.showWrapper),
+    );
+
+    const scrollable = computed(
+      () => props.swipeThreshold && children.length > +props.swipeThreshold,
     );
 
     const barStyle = computed<CSSProperties | undefined>(() => {
@@ -71,11 +82,15 @@ export default defineComponent({
       }
     });
 
+    const close = () => {
+      children.forEach((item) => {
+        item.toggle(false);
+      });
+    };
+
     const onClickAway = () => {
       if (props.closeOnClickOutside) {
-        children.forEach((item) => {
-          item.toggle(false);
-        });
+        close();
       }
     };
 
@@ -85,7 +100,7 @@ export default defineComponent({
         if (props.direction === 'down') {
           offset.value = rect.bottom;
         } else {
-          offset.value = window.innerHeight - rect.top;
+          offset.value = windowHeight.value - rect.top;
         }
       }
     };
@@ -99,7 +114,6 @@ export default defineComponent({
     const toggleItem = (active: number) => {
       children.forEach((item, index) => {
         if (index === active) {
-          updateOffset();
           item.toggle();
         } else if (item.state.showPopup) {
           item.toggle(false, { immediate: true });
@@ -113,9 +127,14 @@ export default defineComponent({
 
       return (
         <div
+          id={`${id}-${index}`}
           role="button"
-          tabindex={disabled ? -1 : 0}
-          class={bem('item', { disabled })}
+          tabindex={disabled ? undefined : 0}
+          data-allow-mismatch="attribute"
+          class={[
+            bem('item', { disabled, grow: scrollable.value }),
+            { [HAPTICS_FEEDBACK]: !disabled },
+          ]}
           onClick={() => {
             if (!disabled) {
               toggleItem(index);
@@ -138,16 +157,23 @@ export default defineComponent({
       );
     };
 
-    linkChildren({ props, offset });
+    useExpose({ close });
+    linkChildren({ id, props, offset, updateOffset });
     useClickAway(root, onClickAway);
-    useEventListener('scroll', onScroll, { target: scrollParent });
+    useEventListener('scroll', onScroll, {
+      target: scrollParent,
+      passive: true,
+    });
 
     return () => (
       <div ref={root} class={bem()}>
         <div
           ref={barRef}
           style={barStyle.value}
-          class={bem('bar', { opened: opened.value })}
+          class={bem('bar', {
+            opened: opened.value,
+            scrollable: scrollable.value,
+          })}
         >
           {children.map(renderTitle)}
         </div>

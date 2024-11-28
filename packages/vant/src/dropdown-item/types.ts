@@ -1,10 +1,14 @@
 import type { DropdownItemProps } from './DropdownItem';
 import type { VNode, ComponentPublicInstance } from 'vue';
+import type { Numeric } from '../utils';
+
+export type DropdownItemOptionValue = Numeric | boolean;
 
 export type DropdownItemOption = {
+  disabled?: boolean;
   text: string;
   icon?: string;
-  value: number | string;
+  value: DropdownItemOptionValue;
 };
 
 export type DropdownItemExpose = {
@@ -12,19 +16,15 @@ export type DropdownItemExpose = {
     show?: boolean,
     options?: {
       immediate?: boolean;
-    }
+    },
   ) => void;
-  /**
-   * @private
-   */
+  /** @private */
   state: {
     showPopup: boolean;
     transition: boolean;
     showWrapper: boolean;
   };
-  /**
-   * @private
-   */
+  /** @private */
   renderTitle: () => string | VNode[];
 };
 
@@ -32,3 +32,7 @@ export type DropdownItemInstance = ComponentPublicInstance<
   DropdownItemProps,
   DropdownItemExpose
 >;
+
+export type DropdownItemThemeVars = {
+  dropdownItemZIndex?: number | string;
+};

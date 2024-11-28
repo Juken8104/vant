@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should render demo and match snapshot 1`] = `
 <div>
@@ -7,9 +7,10 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>
@@ -20,32 +21,44 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/leaf.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
       </div>
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/tree.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/tree.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -53,10 +66,11 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="*"
-               multiple
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="*"
+          multiple
         >
       </div>
     </div>
@@ -67,9 +81,10 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/leaf.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
@@ -77,15 +92,21 @@ exports[`should render demo and match snapshot 1`] = `
           </div>
         </div>
         <div class="van-uploader__mask">
-          <div class="van-loading van-loading--circular van-uploader__loading">
+          <div
+            class="van-loading van-loading--circular van-uploader__loading"
+            aria-live="polite"
+            aria-busy="true"
+          >
             <span class="van-loading__spinner van-loading__spinner--circular">
-              <svg class="van-loading__circular"
-                   viewbox="25 25 50 50"
+              <svg
+                class="van-loading__circular"
+                viewbox="25 25 50 50"
               >
-                <circle cx="50"
-                        cy="50"
-                        r="20"
-                        fill="none"
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="20"
+                  fill="none"
                 >
                 </circle>
               </svg>
@@ -98,9 +119,10 @@ exports[`should render demo and match snapshot 1`] = `
       </div>
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/tree.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/tree.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
@@ -114,7 +136,12 @@ exports[`should render demo and match snapshot 1`] = `
             Failed
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -122,9 +149,10 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>
@@ -135,16 +163,22 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/sand.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/sand.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -152,10 +186,11 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
-               multiple
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
+          multiple
         >
       </div>
     </div>
@@ -166,16 +201,22 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/sand.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/sand.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -183,10 +224,11 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
-               multiple
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
+          multiple
         >
       </div>
     </div>
@@ -196,8 +238,9 @@ exports[`should render demo and match snapshot 1`] = `
   <div class="van-uploader">
     <div class="van-uploader__wrapper">
       <div class="van-uploader__input-wrapper">
-        <button type="button"
-                class="van-button van-button--primary van-button--normal"
+        <button
+          type="button"
+          class="van-button van-button--primary van-button--normal"
         >
           <div class="van-button__content">
             <i class="van-badge__wrapper van-icon van-icon-plus van-button__icon">
@@ -207,9 +250,10 @@ exports[`should render demo and match snapshot 1`] = `
             </span>
           </div>
         </button>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>
@@ -220,9 +264,10 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/leaf.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
@@ -234,7 +279,12 @@ exports[`should render demo and match snapshot 1`] = `
             </div>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -242,9 +292,53 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="van-uploader">
+    <div class="van-uploader__wrapper">
+      <div class="van-uploader__preview">
+        <div
+          class="van-image van-uploader__preview-image"
+          style="width: 60px; height: 60px;"
+        >
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
+          >
+          <div class="van-image__loading">
+            <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
+            </i>
+          </div>
+        </div>
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
+          <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
+          </i>
+        </div>
+      </div>
+      <div
+        class="van-uploader__upload"
+        style="width: 60px; height: 60px;"
+      >
+        <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
+        </i>
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>
@@ -256,9 +350,10 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>
@@ -270,10 +365,11 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="image/*"
-               disabled
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
+          disabled
         >
       </div>
     </div>
@@ -284,46 +380,73 @@ exports[`should render demo and match snapshot 1`] = `
     <div class="van-uploader__wrapper">
       <div class="van-uploader__preview">
         <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/leaf.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/sand.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-      </div>
-      <div class="van-uploader__preview">
-        <div class="van-image van-uploader__preview-image">
-          <img src="https://img.yzcdn.cn/vant/sand.jpg"
-               class="van-image__img"
-               style="object-fit: cover;"
-          >
-          <div class="van-image__loading">
-            <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
-            </i>
-          </div>
-        </div>
-        <div class="van-uploader__preview-delete">
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
       </div>
       <div class="van-uploader__preview">
-        <div class="van-image van-uploader__preview-image"
-             style="width: 120px; height: 120px;"
-        >
-          <img src="https://img.yzcdn.cn/vant/tree.jpg"
-               class="van-image__img"
-               style="object-fit: contain;"
+        <div class="van-image van-uploader__preview-image">
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/tree.jpeg"
+            class="van-image__img"
+            style="object-fit: contain;"
           >
           <div class="van-image__loading">
             <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
             </i>
           </div>
         </div>
-        <div class="van-uploader__preview-delete">
+      </div>
+      <div class="van-uploader__upload">
+        <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
+        </i>
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="*"
+          multiple
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="van-uploader">
+    <div class="van-uploader__wrapper">
+      <div class="van-uploader__preview">
+        <div class="van-image van-uploader__preview-image">
+          <img
+            src="https://fastly.jsdelivr.net/npm/@vant/assets/leaf.jpeg"
+            class="van-image__img"
+            style="object-fit: cover;"
+          >
+          <div class="van-image__loading">
+            <i class="van-badge__wrapper van-icon van-icon-photo van-image__loading-icon">
+            </i>
+          </div>
+        </div>
+        <div
+          role="button"
+          class="van-uploader__preview-delete van-uploader__preview-delete--shadow"
+          tabindex="0"
+          aria-label="Delete"
+        >
           <i class="van-badge__wrapper van-icon van-icon-cross van-uploader__preview-delete-icon">
           </i>
         </div>
@@ -331,10 +454,10 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-uploader__upload">
         <i class="van-badge__wrapper van-icon van-icon-photograph van-uploader__upload-icon">
         </i>
-        <input type="file"
-               class="van-uploader__input"
-               accept="*"
-               multiple
+        <input
+          type="file"
+          class="van-uploader__input"
+          accept="image/*"
         >
       </div>
     </div>

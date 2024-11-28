@@ -1,4 +1,9 @@
-import { ref, CSSProperties, defineComponent } from 'vue';
+import {
+  ref,
+  defineComponent,
+  type CSSProperties,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -7,6 +12,7 @@ import {
   BORDER_BOTTOM,
   getZIndexStyle,
   createNamespace,
+  HAPTICS_FEEDBACK,
 } from '../utils';
 
 // Composables
@@ -17,29 +23,44 @@ import { Icon } from '../icon';
 
 const [name, bem] = createNamespace('nav-bar');
 
+export const navBarProps = {
+  title: String,
+  fixed: Boolean,
+  zIndex: numericProp,
+  border: truthProp,
+  leftText: String,
+  rightText: String,
+  leftDisabled: Boolean,
+  rightDisabled: Boolean,
+  leftArrow: Boolean,
+  placeholder: Boolean,
+  safeAreaInsetTop: Boolean,
+  clickable: truthProp,
+};
+
+export type NavBarProps = ExtractPropTypes<typeof navBarProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    title: String,
-    fixed: Boolean,
-    zIndex: numericProp,
-    border: truthProp,
-    leftText: String,
-    rightText: String,
-    leftArrow: Boolean,
-    placeholder: Boolean,
-    safeAreaInsetTop: Boolean,
-  },
+  props: navBarProps,
 
-  emits: ['click-left', 'click-right'],
+  emits: ['clickLeft', 'clickRight'],
 
   setup(props, { emit, slots }) {
     const navBarRef = ref<HTMLElement>();
     const renderPlaceholder = usePlaceholder(navBarRef, bem);
 
-    const onClickLeft = (event: MouseEvent) => emit('click-left', event);
-    const onClickRight = (event: MouseEvent) => emit('click-right', event);
+    const onClickLeft = (event: MouseEvent) => {
+      if (!props.leftDisabled) {
+        emit('clickLeft', event);
+      }
+    };
+    const onClickRight = (event: MouseEvent) => {
+      if (!props.rightDisabled) {
+        emit('clickRight', event);
+      }
+    };
 
     const renderLeft = () => {
       if (slots.left) {
@@ -72,13 +93,24 @@ export default defineComponent({
           ref={navBarRef}
           style={style}
           class={[
-            bem({ fixed, 'safe-area-inset-top': props.safeAreaInsetTop }),
-            { [BORDER_BOTTOM]: border },
+            bem({ fixed }),
+            {
+              [BORDER_BOTTOM]: border,
+              'van-safe-area-top': props.safeAreaInsetTop,
+            },
           ]}
         >
           <div class={bem('content')}>
             {hasLeft && (
-              <div class={bem('left')} onClick={onClickLeft}>
+              <div
+                class={[
+                  bem('left', { disabled: props.leftDisabled }),
+                  props.clickable && !props.leftDisabled
+                    ? HAPTICS_FEEDBACK
+                    : '',
+                ]}
+                onClick={onClickLeft}
+              >
                 {renderLeft()}
               </div>
             )}
@@ -86,7 +118,15 @@ export default defineComponent({
               {slots.title ? slots.title() : title}
             </div>
             {hasRight && (
-              <div class={bem('right')} onClick={onClickRight}>
+              <div
+                class={[
+                  bem('right', { disabled: props.rightDisabled }),
+                  props.clickable && !props.rightDisabled
+                    ? HAPTICS_FEEDBACK
+                    : '',
+                ]}
+                onClick={onClickRight}
+              >
                 {renderRight()}
               </div>
             )}

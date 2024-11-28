@@ -3,7 +3,7 @@ import { mount } from '../../../test';
 import type { SearchInstance } from '../types';
 
 test('should emit update:modelValue event when input value changed', () => {
-  const onUpdateModelValue = jest.fn();
+  const onUpdateModelValue = vi.fn();
   const wrapper = mount(Search, {
     props: {
       'onUpdate:modelValue': onUpdateModelValue,
@@ -29,7 +29,7 @@ test('should emit cancel event when cancel button click is clicked', () => {
   const cancel = wrapper.find('.van-search__action');
   cancel.trigger('click');
 
-  expect(wrapper.emitted('cancel')!.length).toEqual(1);
+  expect(wrapper.emitted('cancel')).toHaveLength(1);
   expect(wrapper.emitted('update:modelValue')![0]).toEqual(['']);
 });
 
@@ -57,7 +57,7 @@ test('should emit search event when enter key is pressed', () => {
   input.trigger('keypress.enter');
   input.trigger('keypress.a');
 
-  expect(wrapper.emitted('search')!.length).toEqual(1);
+  expect(wrapper.emitted('search')).toHaveLength(1);
 });
 
 test('should render label slot correctly', () => {
@@ -123,7 +123,7 @@ test('should render action text when using action-text prop', () => {
 
 test('should call input.focus when vm.focus is called', () => {
   const wrapper = mount(Search);
-  const onFocus = jest.fn();
+  const onFocus = vi.fn();
   wrapper.find('input').element.focus = onFocus;
 
   (wrapper.vm as SearchInstance).focus();
@@ -132,7 +132,7 @@ test('should call input.focus when vm.focus is called', () => {
 
 test('should call input.blur when vm.blur is called', () => {
   const wrapper = mount(Search);
-  const onBlur = jest.fn();
+  const onBlur = vi.fn();
   wrapper.find('input').element.blur = onBlur;
 
   (wrapper.vm as SearchInstance).blur();
@@ -158,7 +158,7 @@ test('should allow to set autocomplete attribute', () => {
     },
   });
   expect(wrapper.find('input').element.getAttribute('autocomplete')).toEqual(
-    'on'
+    'on',
   );
 });
 
@@ -169,4 +169,26 @@ test('should render input name when using name prop', () => {
     },
   });
   expect(wrapper.find('input').element.getAttribute('name')).toEqual('foo');
+});
+
+test('should emit clickLeftIcon event after clicking the left icon', async () => {
+  const wrapper = mount(Search, {
+    props: {
+      leftIcon: 'foo',
+    },
+  });
+
+  await wrapper.find('.van-field__left-icon').trigger('click');
+  expect(wrapper.emitted('clickLeftIcon')).toHaveLength(1);
+});
+
+test('should emit clickRightIcon event after clicking the right icon', async () => {
+  const wrapper = mount(Search, {
+    props: {
+      rightIcon: 'foo',
+    },
+  });
+
+  await wrapper.find('.van-field__right-icon').trigger('click');
+  expect(wrapper.emitted('clickRightIcon')).toHaveLength(1);
 });

@@ -1,11 +1,13 @@
 import {
   ref,
   watch,
+  computed,
   nextTick,
   onUpdated,
   onMounted,
   defineComponent,
-  ExtractPropTypes,
+  type PropType,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -30,11 +32,13 @@ import type { ListExpose, ListDirection } from './types';
 
 const [name, bem, t] = createNamespace('list');
 
-const props = {
+export const listProps = {
   error: Boolean,
   offset: makeNumericProp(300),
   loading: Boolean,
+  disabled: Boolean,
   finished: Boolean,
+  scroller: Object as PropType<Element>,
   errorText: String,
   direction: makeStringProp<ListDirection>('down'),
   loadingText: String,
@@ -42,28 +46,30 @@ const props = {
   immediateCheck: truthProp,
 };
 
-export type ListProps = ExtractPropTypes<typeof props>;
+export type ListProps = ExtractPropTypes<typeof listProps>;
 
 export default defineComponent({
   name,
 
-  props,
+  props: listProps,
 
   emits: ['load', 'update:error', 'update:loading'],
 
   setup(props, { emit, slots }) {
     // use sync innerLoading state to avoid repeated loading in some edge cases
-    const loading = ref(false);
+    const loading = ref(props.loading);
     const root = ref<HTMLElement>();
     const placeholder = ref<HTMLElement>();
     const tabStatus = useTabStatus();
     const scrollParent = useScrollParent(root);
+    const scroller = computed(() => props.scroller || scrollParent.value);
 
     const check = () => {
       nextTick(() => {
         if (
           loading.value ||
           props.finished ||
+          props.disabled ||
           props.error ||
           // skip check when inside an inactive tab
           tabStatus?.value === false
@@ -71,8 +77,9 @@ export default defineComponent({
           return;
         }
 
-        const { offset, direction } = props;
-        const scrollParentRect = useRect(scrollParent);
+        const { direction } = props;
+        const offset = +props.offset;
+        const scrollParentRect = useRect(scroller);
 
         if (!scrollParentRect.height || isHidden(root)) {
           return;
@@ -115,7 +122,12 @@ export default defineComponent({
         const text = slots.error ? slots.error() : props.errorText;
         if (text) {
           return (
-            <div class={bem('error-text')} onClick={clickErrorText}>
+            <div
+              role="button"
+              class={bem('error-text')}
+              tabindex={0}
+              onClick={clickErrorText}
+            >
               {text}
             </div>
           );
@@ -124,7 +136,7 @@ export default defineComponent({
     };
 
     const renderLoading = () => {
-      if (loading.value && !props.finished) {
+      if (loading.value && !props.finished && !props.disabled) {
         return (
           <div class={bem('loading')}>
             {slots.loading ? (
@@ -139,10 +151,7 @@ export default defineComponent({
       }
     };
 
-    watch(
-      [() => props.loading, () => props.finished, () => props.error],
-      check
-    );
+    watch(() => [props.loading, props.finished, props.error], check);
 
     if (tabStatus) {
       watch(tabStatus, (tabActive) => {
@@ -164,7 +173,10 @@ export default defineComponent({
 
     useExpose<ListExpose>({ check });
 
-    useEventListener('scroll', check, { target: scrollParent });
+    useEventListener('scroll', check, {
+      target: scroller,
+      passive: true,
+    });
 
     return () => {
       const Content = slots.default?.();

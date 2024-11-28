@@ -1,14 +1,9 @@
 {
+  "extends": "../../tsconfig",
   "compilerOptions": {
-    "target": "ES2015",
     "outDir": "./dist",
-    "module": "ES2015",
-    "strict": true,
-    "declaration": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "lib": ["esnext", "dom"]
+    "declaration": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["**/node_modules", "**/.*/"]
 }

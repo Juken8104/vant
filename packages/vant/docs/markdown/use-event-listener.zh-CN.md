@@ -26,11 +26,32 @@ export default {
       () => {
         console.log('click body');
       },
-      { target: document.body }
+      { target: document.body },
     );
   },
 };
 ```
+
+### 取消事件监听
+
+`useEventListener` 会返回一个 `cleanup` 函数，调用该函数可以取消事件监听。
+
+```js
+import { ref } from 'vue';
+import { useEventListener } from '@vant/use';
+
+export default {
+  setup() {
+    const cleanup = useEventListener('resize', () => {
+      console.log('window resize');
+    });
+
+    cleanup();
+  },
+};
+```
+
+## API
 
 ### 类型定义
 
@@ -44,19 +65,17 @@ type Options = {
 function useEventListener(
   type: string,
   listener: EventListener,
-  options?: Options
-): void;
+  options?: Options,
+): () => void;
 ```
-
-## API
 
 ### 参数
 
-| 参数     | 说明                     | 类型            | 默认值 |
-| -------- | ------------------------ | --------------- | ------ |
-| type     | 监听的事件类型           | _string_        | -      |
-| listener | 点击外部时触发的回调函数 | _EventListener_ | -      |
-| options  | 可选的配置项             | _Options_       | -      |
+| 参数     | 说明           | 类型            | 默认值 |
+| -------- | -------------- | --------------- | ------ |
+| type     | 监听的事件类型 | _string_        | -      |
+| listener | 事件回调函数   | _EventListener_ | -      |
+| options  | 可选的配置项   | _Options_       | -      |
 
 ### Options
 

@@ -1,19 +1,22 @@
 import {
   watch,
-  PropType,
-  InjectionKey,
   defineComponent,
-  ExtractPropTypes,
+  type PropType,
+  type InjectionKey,
+  type ExtractPropTypes,
 } from 'vue';
 import { unknownProp, numericProp, createNamespace } from '../utils';
 import { useChildren, useCustomFieldValue } from '@vant/use';
+
+import type { RadioShape } from '../radio';
 import type { CheckerDirection } from '../checkbox/Checker';
 
 const [name, bem] = createNamespace('radio-group');
 
 export type RadioGroupDirection = CheckerDirection;
 
-const props = {
+export const radioGroupProps = {
+  shape: String as PropType<RadioShape>,
   disabled: Boolean,
   iconSize: numericProp,
   direction: String as PropType<RadioGroupDirection>,
@@ -21,8 +24,10 @@ const props = {
   checkedColor: String,
 };
 
+export type RadioGroupProps = ExtractPropTypes<typeof radioGroupProps>;
+
 export type RadioGroupProvide = {
-  props: ExtractPropTypes<typeof props>;
+  props: RadioGroupProps;
   updateValue: (value: unknown) => void;
 };
 
@@ -31,7 +36,7 @@ export const RADIO_KEY: InjectionKey<RadioGroupProvide> = Symbol(name);
 export default defineComponent({
   name,
 
-  props,
+  props: radioGroupProps,
 
   emits: ['change', 'update:modelValue'],
 
@@ -42,7 +47,7 @@ export default defineComponent({
 
     watch(
       () => props.modelValue,
-      (value) => emit('change', value)
+      (value) => emit('change', value),
     );
 
     linkChildren({

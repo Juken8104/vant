@@ -1,6 +1,6 @@
-import execa from 'execa';
-import { consola } from './logger';
+import { logger } from 'rslog';
 import { execSync } from 'child_process';
+import { getVantConfig } from './constant.js';
 
 let hasYarnCache: boolean;
 
@@ -17,13 +17,23 @@ export function hasYarn() {
   return hasYarnCache;
 }
 
+export function getPackageManager() {
+  const { build } = getVantConfig();
+
+  if (build?.packageManager) {
+    return build?.packageManager;
+  }
+
+  return hasYarn() ? 'yarn' : 'npm';
+}
+
 export async function installDependencies() {
-  consola.info('Install Dependencies\n');
+  logger.info('Install Dependencies\n');
 
   try {
-    const manager = hasYarn() ? 'yarn' : 'npm';
+    const manager = getPackageManager();
 
-    await execa(manager, ['install', '--prod=false'], {
+    execSync(`${manager} install --prod=false`, {
       stdio: 'inherit',
     });
 

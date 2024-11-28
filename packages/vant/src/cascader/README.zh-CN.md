@@ -80,6 +80,71 @@ export default {
 };
 ```
 
+### 中国省市区数据
+
+Cascader 组件常用于选择省市区，Vant 提供了一份中国省市区数据，你可以安装 [@vant/area-data](https://github.com/vant-ui/vant/tree/main/packages/vant-area-data) npm 包来引入：
+
+```bash
+# 通过 npm
+npm i @vant/area-data
+
+# 通过 yarn
+yarn add @vant/area-data
+
+# 通过 pnpm
+pnpm add @vant/area-data
+
+# 通过 Bun
+bun add @vant/area-data
+```
+
+```html
+<van-field
+  v-model="fieldValue"
+  is-link
+  readonly
+  label="地区"
+  placeholder="请选择所在地区"
+  @click="show = true"
+/>
+<van-popup v-model:show="show" round position="bottom">
+  <van-cascader
+    v-model="cascaderValue"
+    title="请选择所在地区"
+    :options="options"
+    @close="show = false"
+    @finish="onFinish"
+  />
+</van-popup>
+```
+
+```js
+import { ref } from 'vue';
+import { useCascaderAreaData } from '@vant/area-data';
+
+export default {
+  setup() {
+    const show = ref(false);
+    const fieldValue = ref('');
+    const cascaderValue = ref('');
+    const options = useCascaderAreaData();
+    const onFinish = ({ selectedOptions }) => {
+      show.value = false;
+      fieldValue.value = selectedOptions.map((option) => option.text).join('/');
+    };
+    return {
+      show,
+      options,
+      onFinish,
+      fieldValue,
+      cascaderValue,
+    };
+  },
+};
+```
+
+> Tips: 中国的行政区划每年都会有变动，如果发现省市区数据未及时更新，欢迎提 Pull Request 帮助我们更新。你可以在[「国家统计局 - 全国区划代码」](http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/) 和[「民政部 - 行政区划代码」](https://www.mca.gov.cn/article/sj/xzqh/1980/)上查询到最新数据，请根据官方数据进行核实。
+
 ### 自定义颜色
 
 通过 `active-color` 属性来设置选中状态的高亮颜色。
@@ -89,7 +154,7 @@ export default {
   v-model="cascaderValue"
   title="请选择所在地区"
   :options="options"
-  active-color="#1989fa"
+  active-color="#ee0a24"
   @close="show = false"
   @finish="onFinish"
 />
@@ -122,6 +187,7 @@ export default {
 
 ```js
 import { ref } from 'vue';
+import { closeToast, showLoadingToast } from 'vant';
 
 export default {
   setup() {
@@ -136,13 +202,19 @@ export default {
       },
     ]);
     const onChange = ({ value }) => {
-      if (value === options.value[0].value) {
+      if (
+        value === options.value[0].value &&
+        options.value[0].children.length === 0
+      ) {
+        // 模拟数据请求
+        showLoadingToast('加载中...');
         setTimeout(() => {
           options.value[0].children = [
             { text: '杭州市', value: '330100' },
             { text: '宁波市', value: '330200' },
           ];
-        }, 500);
+          closeToast();
+        }, 1000);
       }
     };
     const onFinish = ({ selectedOptions }) => {
@@ -207,50 +279,98 @@ export default {
 };
 ```
 
+### 自定义选项上方内容
+
+```html
+<van-cascader v-model="code" title="请选择所在地区" :options="options">
+  <template #options-top="{ tabIndex }">
+    <div class="current-level">当前为第 {{ tabIndex + 1 }} 级</div>
+  </template>
+</van-cascader>
+
+<style>
+  .current-level {
+    font-size: 14px;
+    padding: 16px 16px 0;
+    color: var(--van-gray-6);
+  }
+</style>
+```
+
+```js
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const code = ref('');
+    const options = [
+      {
+        name: '浙江省',
+        code: '330000',
+        items: [{ name: '杭州市', code: '330100' }],
+      },
+      {
+        name: '江苏省',
+        code: '320000',
+        items: [{ name: '南京市', code: '320100' }],
+      },
+    ];
+
+    return {
+      code,
+      options,
+    };
+  },
+};
+```
+
 ## API
 
 ### Props
 
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
+| v-model | 选中项的值 | _string \| number_ | - |
 | title | 顶部标题 | _string_ | - |
-| value | 选中项的值 | _string \| number_ | - |
-| options | 可选项数据源 | _Option[]_ | `[]` |
+| options | 可选项数据源 | _CascaderOption[]_ | `[]` |
 | placeholder | 未选中时的提示文案 | _string_ | `请选择` |
-| active-color | 选中状态的高亮颜色 | _string_ | `#ee0a24` |
-| swipeable `v3.0.11` | 是否开启手势左右滑动切换 | _boolean_ | `false` |
+| active-color | 选中状态的高亮颜色 | _string_ | `#1989fa` |
+| swipeable | 是否开启手势左右滑动切换 | _boolean_ | `true` |
 | closeable | 是否显示关闭图标 | _boolean_ | `true` |
-| close-icon `v3.0.10` | 关闭[图标名称](#/zh-CN/icon)或图片链接 | _string_ | `cross` |
-| field-names `v3.0.4` | 自定义 `options` 结构中的字段 | _object_ | `{ text: 'text', value: 'value', children: 'children' }` |
+| show-header | 是否展示标题栏 | _boolean_ | `true` |
+| close-icon | 关闭图标名称或图片链接，等同于 Icon 组件的 [name 属性](#/zh-CN/icon#props) | _string_ | `cross` |
+| field-names | 自定义 `options` 结构中的字段 | _CascaderFieldNames_ | `{ text: 'text', value: 'value', children: 'children' }` |
 
-### Option 数据结构
+### CascaderOption 数据结构
 
 `options` 属性是一个由对象构成的数组，数组中的每个对象配置一个可选项，对象可以包含以下值：
 
-| 键名               | 说明                     | 类型                        |
-| ------------------ | ------------------------ | --------------------------- |
-| text               | 选项文字（必填）         | _string_                    |
-| value              | 选项对应的值（必填）     | _string \| number_          |
-| color `v3.1.0`     | 选项文字颜色             | _string_                    |
-| children           | 子选项列表               | _Option[]_                  |
-| disabled `v3.1.2`  | 是否禁用选项             | _boolean_                   |
-| className `v3.1.0` | 为对应列添加额外的 class | _string \| Array \| object_ |
+| 键名      | 说明                     | 类型                        |
+| --------- | ------------------------ | --------------------------- |
+| text      | 选项文字（必填）         | _string_                    |
+| value     | 选项对应的值（必填）     | _string \| number_          |
+| color     | 选项文字颜色             | _string_                    |
+| children  | 子选项列表               | _CascaderOption[]_          |
+| disabled  | 是否禁用选项             | _boolean_                   |
+| className | 为对应列添加额外的 class | _string \| Array \| object_ |
 
 ### Events
 
-| 事件      | 说明                   | 回调参数                               |
-| --------- | ---------------------- | -------------------------------------- |
-| change    | 选中项变化时触发       | `{ value, selectedOptions, tabIndex }` |
-| finish    | 全部选项选择完成后触发 | `{ value, selectedOptions, tabIndex }` |
-| close     | 点击关闭图标时触发     | -                                      |
-| click-tab | 点击标签时触发         | _tabIndex: number, title: string_      |
+| 事件 | 说明 | 回调参数 |
+| --- | --- | --- |
+| change | 选中项变化时触发 | _{ value: string \| number, selectedOptions: CascaderOption[], tabIndex: number }_ |
+| finish | 全部选项选择完成后触发 | _{ value: string \| number, selectedOptions: CascaderOption[], tabIndex: number }_ |
+| close | 点击关闭图标时触发 | - |
+| click-tab | 点击标签时触发 | _tabIndex: number, title: string_ |
 
 ### Slots
 
-| 名称            | 说明           | 参数                                    |
-| --------------- | -------------- | --------------------------------------- |
-| title           | 自定义顶部标题 | -                                       |
-| option `v3.1.4` | 自定义选项文字 | _{ option: Option, selected: boolean }_ |
+| 名称 | 说明 | 参数 |
+| --- | --- | --- |
+| title | 自定义顶部标题 | - |
+| option | 自定义选项文字 | _{ option: CascaderOption, selected: boolean }_ |
+| options-top | 自定义选项上方的内容 | _{ tabIndex: number }_ |
+| options-bottom | 自定义选项下方的内容 | _{ tabIndex: number }_ |
 
 ### 类型定义
 
@@ -266,19 +386,18 @@ import type { CascaderProps, CascaderOption, CascaderFieldNames } from 'vant';
 
 组件提供了下列 CSS 变量，可用于自定义样式，使用方法请参考 [ConfigProvider 组件](#/zh-CN/config-provider)。
 
-| 名称                                   | 默认值                    | 描述 |
-| -------------------------------------- | ------------------------- | ---- |
-| --van-cascader-header-height           | _48px_                    | -    |
-| --van-cascader-header-padding          | _0 var(--van-padding-md)_ | -    |
-| --van-cascader-title-font-size         | _var(--van-font-size-lg)_ | -    |
-| --van-cascader-title-line-height       | _20px_                    | -    |
-| --van-cascader-close-icon-size         | _22px_                    | -    |
-| --van-cascader-close-icon-color        | _var(--van-gray-5)_       | -    |
-| --van-cascader-close-icon-active-color | _var(--van-gray-6)_       | -    |
-| --van-cascader-selected-icon-size      | _18px_                    | -    |
-| --van-cascader-tabs-height             | _48px_                    | -    |
-| --van-cascader-active-color            | _var(--van-danger-color)_ | -    |
-| --van-cascader-options-height          | _384px_                   | -    |
-| --van-cascader-option-disabled-color   | _van(--van-gray-5)_       | -    |
-| --van-cascader-tab-color               | _var(--van-text-color)_   | -    |
-| --van-cascader-unselected-tab-color    | _var(--van-gray-6)_       | -    |
+| 名称                                 | 默认值                    | 描述 |
+| ------------------------------------ | ------------------------- | ---- |
+| --van-cascader-header-height         | _48px_                    | -    |
+| --van-cascader-header-padding        | _0 var(--van-padding-md)_ | -    |
+| --van-cascader-title-font-size       | _var(--van-font-size-lg)_ | -    |
+| --van-cascader-title-line-height     | _20px_                    | -    |
+| --van-cascader-close-icon-size       | _22px_                    | -    |
+| --van-cascader-close-icon-color      | _var(--van-gray-5)_       | -    |
+| --van-cascader-selected-icon-size    | _18px_                    | -    |
+| --van-cascader-tabs-height           | _48px_                    | -    |
+| --van-cascader-active-color          | _var(--van-danger-color)_ | -    |
+| --van-cascader-options-height        | _384px_                   | -    |
+| --van-cascader-option-disabled-color | _var(--van-text-color-3)_ | -    |
+| --van-cascader-tab-color             | _var(--van-text-color)_   | -    |
+| --van-cascader-unselected-tab-color  | _var(--van-text-color-2)_ | -    |

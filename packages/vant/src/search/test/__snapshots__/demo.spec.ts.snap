@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should render demo and match snapshot 1`] = `
 <div>
@@ -9,11 +9,14 @@ exports[`should render demo and match snapshot 1`] = `
           <i class="van-badge__wrapper van-icon van-icon-search">
           </i>
         </div>
-        <div class="van-cell__value van-cell__value--alone van-field__value">
+        <div class="van-cell__value van-field__value">
           <div class="van-field__body">
-            <input type="search"
-                   class="van-field__control"
-                   placeholder="Placeholder"
+            <input
+              type="search"
+              id="van-search-input"
+              class="van-field__control"
+              placeholder="Placeholder"
+              data-allow-mismatch="attribute"
             >
           </div>
         </div>
@@ -30,19 +33,23 @@ exports[`should render demo and match snapshot 1`] = `
             <i class="van-badge__wrapper van-icon van-icon-search">
             </i>
           </div>
-          <div class="van-cell__value van-cell__value--alone van-field__value">
+          <div class="van-cell__value van-field__value">
             <div class="van-field__body">
-              <input type="search"
-                     class="van-field__control"
-                     placeholder="Placeholder"
+              <input
+                type="search"
+                id="van-search-input"
+                class="van-field__control"
+                placeholder="Placeholder"
+                data-allow-mismatch="attribute"
               >
             </div>
           </div>
         </div>
       </div>
-      <div class="van-search__action"
-           role="button"
-           tabindex="0"
+      <div
+        class="van-search__action"
+        role="button"
+        tabindex="0"
       >
         Cancel
       </div>
@@ -57,11 +64,14 @@ exports[`should render demo and match snapshot 1`] = `
           <i class="van-badge__wrapper van-icon van-icon-search">
           </i>
         </div>
-        <div class="van-cell__value van-cell__value--alone van-field__value">
+        <div class="van-cell__value van-field__value">
           <div class="van-field__body">
-            <input type="search"
-                   class="van-field__control van-field__control--center"
-                   placeholder="Placeholder"
+            <input
+              type="search"
+              id="van-search-input"
+              class="van-field__control van-field__control--center"
+              placeholder="Placeholder"
+              data-allow-mismatch="attribute"
             >
           </div>
         </div>
@@ -77,12 +87,15 @@ exports[`should render demo and match snapshot 1`] = `
           <i class="van-badge__wrapper van-icon van-icon-search">
           </i>
         </div>
-        <div class="van-cell__value van-cell__value--alone van-field__value">
+        <div class="van-cell__value van-field__value">
           <div class="van-field__body">
-            <input type="search"
-                   class="van-field__control"
-                   disabled
-                   placeholder="Placeholder"
+            <input
+              type="search"
+              id="van-search-input"
+              class="van-field__control"
+              disabled
+              placeholder="Placeholder"
+              data-allow-mismatch="attribute"
             >
           </div>
         </div>
@@ -91,8 +104,9 @@ exports[`should render demo and match snapshot 1`] = `
   </div>
 </div>
 <div>
-  <div class="van-search"
-       style="background: rgb(79, 192, 141);"
+  <div
+    class="van-search"
+    style="background: rgb(79, 192, 141);"
   >
     <div class="van-search__content van-search__content--round">
       <div class="van-cell van-cell--borderless van-field van-search__field">
@@ -100,11 +114,14 @@ exports[`should render demo and match snapshot 1`] = `
           <i class="van-badge__wrapper van-icon van-icon-search">
           </i>
         </div>
-        <div class="van-cell__value van-cell__value--alone van-field__value">
+        <div class="van-cell__value van-field__value">
           <div class="van-field__body">
-            <input type="search"
-                   class="van-field__control"
-                   placeholder="Placeholder"
+            <input
+              type="search"
+              id="van-search-input"
+              class="van-field__control"
+              placeholder="Placeholder"
+              data-allow-mismatch="attribute"
             >
           </div>
         </div>
@@ -115,7 +132,11 @@ exports[`should render demo and match snapshot 1`] = `
 <div>
   <div class="van-search van-search--show-action">
     <div class="van-search__content van-search__content--square">
-      <label class="van-search__label">
+      <label
+        class="van-search__label"
+        for="van-search-input"
+        data-allow-mismatch="attribute"
+      >
         Address
       </label>
       <div class="van-cell van-cell--borderless van-field van-search__field">
@@ -123,19 +144,23 @@ exports[`should render demo and match snapshot 1`] = `
           <i class="van-badge__wrapper van-icon van-icon-search">
           </i>
         </div>
-        <div class="van-cell__value van-cell__value--alone van-field__value">
+        <div class="van-cell__value van-field__value">
           <div class="van-field__body">
-            <input type="search"
-                   class="van-field__control"
-                   placeholder="Placeholder"
+            <input
+              type="search"
+              id="van-search-input"
+              class="van-field__control"
+              placeholder="Placeholder"
+              data-allow-mismatch="attribute"
             >
           </div>
         </div>
       </div>
     </div>
-    <div class="van-search__action"
-         role="button"
-         tabindex="0"
+    <div
+      class="van-search__action"
+      role="button"
+      tabindex="0"
     >
       <div>
         Search

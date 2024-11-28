@@ -1,4 +1,9 @@
-import { defineComponent } from 'vue';
+import {
+  defineComponent,
+  computed,
+  type ExtractPropTypes,
+  type PropType,
+} from 'vue';
 
 // Utils
 import {
@@ -6,54 +11,79 @@ import {
   numericProp,
   makeArrayProp,
   createNamespace,
+  makeStringProp,
 } from '../utils';
 
 // Components
 import { Button } from '../button';
 import { RadioGroup } from '../radio-group';
+import { CheckboxGroup } from '../checkbox-group';
 import AddressListItem, { AddressListAddress } from './AddressListItem';
 
 const [name, bem, t] = createNamespace('address-list');
 
+export const addressListProps = {
+  list: makeArrayProp<AddressListAddress>(),
+  modelValue: [...numericProp, Array] as PropType<
+    string | number | Array<string | number>
+  >,
+  switchable: truthProp,
+  disabledText: String,
+  disabledList: makeArrayProp<AddressListAddress>(),
+  showAddButton: truthProp,
+  addButtonText: String,
+  defaultTagText: String,
+  rightIcon: makeStringProp('edit'),
+};
+
+export type AddressListProps = ExtractPropTypes<typeof addressListProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    list: makeArrayProp<AddressListAddress>(),
-    modelValue: numericProp,
-    switchable: truthProp,
-    disabledText: String,
-    disabledList: makeArrayProp<AddressListAddress>(),
-    addButtonText: String,
-    defaultTagText: String,
-  },
+  props: addressListProps,
 
   emits: [
     'add',
     'edit',
     'select',
-    'click-item',
-    'edit-disabled',
-    'select-disabled',
+    'clickItem',
+    'editDisabled',
+    'selectDisabled',
     'update:modelValue',
   ],
 
   setup(props, { slots, emit }) {
+    const singleChoice = computed(() => !Array.isArray(props.modelValue));
+
     const renderItem = (
       item: AddressListAddress,
       index: number,
-      disabled?: boolean
+      disabled?: boolean,
     ) => {
       const onEdit = () =>
-        emit(disabled ? 'edit-disabled' : 'edit', item, index);
+        emit(disabled ? 'editDisabled' : 'edit', item, index);
 
-      const onClick = () => emit('click-item', item, index);
+      const onClick = (event: MouseEvent) =>
+        emit('clickItem', item, index, { event });
 
       const onSelect = () => {
-        emit(disabled ? 'select-disabled' : 'select', item, index);
+        emit(disabled ? 'selectDisabled' : 'select', item, index);
 
         if (!disabled) {
-          emit('update:modelValue', item.id);
+          if (singleChoice.value) {
+            emit('update:modelValue', item.id);
+          } else {
+            const value = props.modelValue as Array<string | number>;
+            if (value.includes(item.id)) {
+              emit(
+                'update:modelValue',
+                value.filter((id) => id !== item.id),
+              );
+            } else {
+              emit('update:modelValue', [...value, item.id]);
+            }
+          }
         }
       };
 
@@ -67,7 +97,9 @@ export default defineComponent({
           address={item}
           disabled={disabled}
           switchable={props.switchable}
+          singleChoice={singleChoice.value}
           defaultTagText={props.defaultTagText}
+          rightIcon={props.rightIcon}
           onEdit={onEdit}
           onClick={onClick}
           onSelect={onSelect}
@@ -81,18 +113,19 @@ export default defineComponent({
       }
     };
 
-    const renderBottom = () => (
-      <div class={[bem('bottom'), 'van-safe-area-bottom']}>
-        <Button
-          round
-          block
-          type="danger"
-          text={props.addButtonText || t('add')}
-          class={bem('add')}
-          onClick={() => emit('add')}
-        />
-      </div>
-    );
+    const renderBottom = () =>
+      props.showAddButton ? (
+        <div class={[bem('bottom'), 'van-safe-area-bottom']}>
+          <Button
+            round
+            block
+            type="primary"
+            text={props.addButtonText || t('add')}
+            class={bem('add')}
+            onClick={() => emit('add')}
+          />
+        </div>
+      ) : undefined;
 
     return () => {
       const List = renderList(props.list);
@@ -104,7 +137,11 @@ export default defineComponent({
       return (
         <div class={bem()}>
           {slots.top?.()}
-          <RadioGroup modelValue={props.modelValue}>{List}</RadioGroup>
+          {!singleChoice.value && Array.isArray(props.modelValue) ? (
+            <CheckboxGroup modelValue={props.modelValue}>{List}</CheckboxGroup>
+          ) : (
+            <RadioGroup modelValue={props.modelValue}>{List}</RadioGroup>
+          )}
           {DisabledText}
           {DisabledList}
           {slots.default?.()}

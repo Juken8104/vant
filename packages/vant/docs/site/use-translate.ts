@@ -1,3 +1,4 @@
+import { inBrowser } from '@vant/use';
 import Locale from '../../src/locale';
 import enUS from '../../src/locale/lang/en-US';
 import { camelize, createTranslate } from '../../src/utils';
@@ -17,7 +18,7 @@ export function initDemoLocale() {
   });
 
   // switch lang after routing
-  if (window.vueRouter) {
+  if (inBrowser && window.vueRouter) {
     window.vueRouter.afterEach((to) => {
       const { lang } = to.meta || {};
 
@@ -31,11 +32,7 @@ export function initDemoLocale() {
   Locale.add({
     'zh-CN': {
       add: '增加',
-      decrease: '减少',
       red: '红色',
-      orange: '橙色',
-      yellow: '黄色',
-      purple: '紫色',
       tab: '标签',
       tag: '标签',
       desc: '描述信息',
@@ -45,25 +42,24 @@ export function initDemoLocale() {
       button: '按钮',
       option: '选项',
       search: '搜索',
-      content: '内容',
+      orange: '橙色',
+      yellow: '黄色',
+      purple: '紫色',
       custom: '自定义',
+      content: '内容',
       username: '用户名',
       password: '密码',
+      decrease: '减少',
       disabled: '禁用状态',
       uneditable: '不可编辑',
       basicUsage: '基础用法',
+      usingUrl: '使用图片 URL',
       advancedUsage: '高级用法',
       loadingStatus: '加载状态',
-      usernamePlaceholder: '请输入用户名',
-      passwordPlaceholder: '请输入密码',
     },
     'en-US': {
       add: 'Add',
-      decrease: 'Decrease',
       red: 'Red',
-      orange: 'Orange',
-      yellow: 'Yellow',
-      purple: 'Purple',
       tab: 'Tab',
       tag: 'Tag',
       desc: 'Description',
@@ -73,17 +69,20 @@ export function initDemoLocale() {
       button: 'Button',
       option: 'Option',
       search: 'Search',
-      content: 'Content',
+      orange: 'Orange',
+      yellow: 'Yellow',
+      purple: 'Purple',
       custom: 'Custom',
+      content: 'Content',
       username: 'Username',
       password: 'Password',
-      loadingStatus: 'Loading',
+      decrease: 'Decrease',
       disabled: 'Disabled',
       uneditable: 'Uneditable',
       basicUsage: 'Basic Usage',
+      usingUrl: 'Using URL',
       advancedUsage: 'Advanced Usage',
-      usernamePlaceholder: 'Username',
-      passwordPlaceholder: 'Password',
+      loadingStatus: 'Loading',
     },
   });
 }

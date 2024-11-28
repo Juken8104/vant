@@ -1,4 +1,11 @@
-import { ref, watch, reactive, nextTick, defineComponent } from 'vue';
+import {
+  ref,
+  watch,
+  reactive,
+  nextTick,
+  defineComponent,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -10,7 +17,7 @@ import {
 } from '../utils';
 
 // Composables
-import { useScrollParent } from '@vant/use';
+import { useEventListener, useScrollParent } from '@vant/use';
 import { useTouch } from '../composables/use-touch';
 
 // Components
@@ -28,28 +35,33 @@ type PullRefreshStatus =
   | 'pulling'
   | 'success';
 
+export const pullRefreshProps = {
+  disabled: Boolean,
+  modelValue: Boolean,
+  headHeight: makeNumericProp(DEFAULT_HEAD_HEIGHT),
+  successText: String,
+  pullingText: String,
+  loosingText: String,
+  loadingText: String,
+  pullDistance: numericProp,
+  successDuration: makeNumericProp(500),
+  animationDuration: makeNumericProp(300),
+};
+
+export type PullRefreshProps = ExtractPropTypes<typeof pullRefreshProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    disabled: Boolean,
-    modelValue: Boolean,
-    headHeight: makeNumericProp(DEFAULT_HEAD_HEIGHT),
-    successText: String,
-    pullingText: String,
-    loosingText: String,
-    loadingText: String,
-    pullDistance: numericProp,
-    successDuration: makeNumericProp(500),
-    animationDuration: makeNumericProp(300),
-  },
+  props: pullRefreshProps,
 
-  emits: ['refresh', 'update:modelValue'],
+  emits: ['change', 'refresh', 'update:modelValue'],
 
   setup(props, { emit, slots }) {
     let reachTop: boolean;
 
     const root = ref<HTMLElement>();
+    const track = ref<HTMLElement>();
     const scrollParent = useScrollParent(root);
 
     const state = reactive({
@@ -100,6 +112,11 @@ export default defineComponent({
       } else {
         state.status = 'loosing';
       }
+
+      emit('change', {
+        status: state.status,
+        distance,
+      });
     };
 
     const getStatusText = () => {
@@ -127,7 +144,7 @@ export default defineComponent({
           <Loading
             v-slots={{ default: getStatusText }}
             class={bem('loading')}
-          />
+          />,
         );
       }
 
@@ -201,8 +218,13 @@ export default defineComponent({
         } else {
           setStatus(0, false);
         }
-      }
+      },
     );
+
+    // useEventListener will set passive to `false` to eliminate the warning of Chrome
+    useEventListener('touchmove', onTouchMove, {
+      target: track,
+    });
 
     return () => {
       const trackStyle = {
@@ -215,10 +237,10 @@ export default defineComponent({
       return (
         <div ref={root} class={bem()}>
           <div
+            ref={track}
             class={bem('track')}
             style={trackStyle}
-            onTouchstart={onTouchStart}
-            onTouchmove={onTouchMove}
+            onTouchstartPassive={onTouchStart}
             onTouchend={onTouchEnd}
             onTouchcancel={onTouchEnd}
           >

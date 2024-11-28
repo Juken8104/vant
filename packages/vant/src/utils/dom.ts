@@ -1,6 +1,6 @@
-import { useRect } from '@vant/use';
+import { useRect, useWindowSize } from '@vant/use';
 import { unref, Ref } from 'vue';
-import { isIOS as checkIsIOS } from './validate';
+import { isIOS as checkIsIOS } from './basic';
 
 export type ScrollElement = Element | Window;
 
@@ -66,14 +66,8 @@ export function preventDefault(event: Event, isStopPropagation?: boolean) {
   }
 }
 
-export function trigger(target: Element, type: string) {
-  const inputEvent = document.createEvent('HTMLEvents');
-  inputEvent.initEvent(type, true, true);
-  target.dispatchEvent(inputEvent);
-}
-
 export function isHidden(
-  elementRef: HTMLElement | Ref<HTMLElement | undefined>
+  elementRef: HTMLElement | Ref<HTMLElement | undefined>,
 ) {
   const el = unref(elementRef);
   if (!el) {
@@ -89,4 +83,37 @@ export function isHidden(
   const parentHidden = el.offsetParent === null && style.position !== 'fixed';
 
   return hidden || parentHidden;
+}
+
+export const { width: windowWidth, height: windowHeight } = useWindowSize();
+
+function isContainingBlock(el: Element) {
+  const css = window.getComputedStyle(el);
+
+  return (
+    css.transform !== 'none' ||
+    css.perspective !== 'none' ||
+    ['transform', 'perspective', 'filter'].some((value) =>
+      (css.willChange || '').includes(value),
+    )
+  );
+}
+
+export function getContainingBlock(el: Element) {
+  let node = el.parentElement;
+
+  while (node) {
+    if (
+      node &&
+      node.tagName !== 'HTML' &&
+      node.tagName !== 'BODY' &&
+      isContainingBlock(node)
+    ) {
+      return node;
+    }
+
+    node = node.parentElement;
+  }
+
+  return null;
 }

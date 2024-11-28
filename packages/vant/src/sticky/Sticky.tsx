@@ -2,10 +2,12 @@ import {
   ref,
   watch,
   computed,
-  PropType,
+  nextTick,
   reactive,
-  CSSProperties,
   defineComponent,
+  type PropType,
+  type CSSProperties,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -14,6 +16,8 @@ import {
   isHidden,
   unitToPx,
   numericProp,
+  windowWidth,
+  windowHeight,
   getScrollTop,
   getZIndexStyle,
   makeStringProp,
@@ -29,16 +33,20 @@ const [name, bem] = createNamespace('sticky');
 
 export type StickyPosition = 'top' | 'bottom';
 
+export const stickyProps = {
+  zIndex: numericProp,
+  position: makeStringProp<StickyPosition>('top'),
+  container: Object as PropType<Element>,
+  offsetTop: makeNumericProp(0),
+  offsetBottom: makeNumericProp(0),
+};
+
+export type StickyProps = ExtractPropTypes<typeof stickyProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    zIndex: numericProp,
-    position: makeStringProp<StickyPosition>('top'),
-    container: Object as PropType<Element>,
-    offsetTop: makeNumericProp(0),
-    offsetBottom: makeNumericProp(0),
-  },
+  props: stickyProps,
 
   emits: ['scroll', 'change'],
 
@@ -51,12 +59,16 @@ export default defineComponent({
       height: 0, // root height
       transform: 0,
     });
+    const isReset = ref(false);
 
     const offset = computed(() =>
-      unitToPx(props.position === 'top' ? props.offsetTop : props.offsetBottom)
+      unitToPx(props.position === 'top' ? props.offsetTop : props.offsetBottom),
     );
 
     const rootStyle = computed<CSSProperties | undefined>(() => {
+      if (isReset.value) {
+        return;
+      }
       const { fixed, height, width } = state;
       if (fixed) {
         return {
@@ -67,7 +79,7 @@ export default defineComponent({
     });
 
     const stickyStyle = computed<CSSProperties | undefined>(() => {
-      if (!state.fixed) {
+      if (!state.fixed || isReset.value) {
         return;
       }
 
@@ -132,15 +144,34 @@ export default defineComponent({
 
     watch(
       () => state.fixed,
-      (value) => emit('change', value)
+      (value) => emit('change', value),
     );
 
-    useEventListener('scroll', onScroll, { target: scrollParent });
+    useEventListener('scroll', onScroll, {
+      target: scrollParent,
+      passive: true,
+    });
     useVisibilityChange(root, onScroll);
+
+    watch([windowWidth, windowHeight], () => {
+      if (!root.value || isHidden(root) || !state.fixed) {
+        return;
+      }
+      isReset.value = true;
+      nextTick(() => {
+        const rootRect = useRect(root);
+        state.width = rootRect.width;
+        state.height = rootRect.height;
+        isReset.value = false;
+      });
+    });
 
     return () => (
       <div ref={root} style={rootStyle.value}>
-        <div class={bem({ fixed: state.fixed })} style={stickyStyle.value}>
+        <div
+          class={bem({ fixed: state.fixed && !isReset.value })}
+          style={stickyStyle.value}
+        >
           {slots.default?.()}
         </div>
       </div>

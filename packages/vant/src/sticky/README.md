@@ -67,9 +67,9 @@ export default {
 
 | Attribute | Description | Type | Default |
 | --- | --- | --- | --- |
-| position `v3.0.6` | Offset position, can be set to `bottom` | _string_ | `top` |
+| position | Offset position, can be set to `bottom` | _string_ | `top` |
 | offset-top | Offset top, supports `px` `vw` `vh` `rem` unit, default `px` | _number \| string_ | `0` |
-| offset-bottom `v3.0.6` | Offset bottom, supports `px` `vw` `vh` `rem` unit, default `px` | _number \| string_ | `0` |
+| offset-bottom | Offset bottom, supports `px` `vw` `vh` `rem` unit, default `px` | _number \| string_ | `0` |
 | z-index | z-index when sticky | _number \| string_ | `99` |
 | container | Container DOM | _Element_ | - |
 
@@ -77,7 +77,7 @@ export default {
 
 | Event | Description | Arguments |
 | --- | --- | --- |
-| change `v3.0.10` | Emitted when sticky status changed | _isFixed: boolean_ |
+| change | Emitted when sticky status changed | _isFixed: boolean_ |
 | scroll | Emitted when scrolling | _{ scrollTop: number, isFixed: boolean }_ |
 
 ### Types
@@ -85,7 +85,7 @@ export default {
 The component exports the following type definitions:
 
 ```ts
-import type { StickyPosition } from 'vant';
+import type { StickyProps, StickyPosition } from 'vant';
 ```
 
 ## Theming

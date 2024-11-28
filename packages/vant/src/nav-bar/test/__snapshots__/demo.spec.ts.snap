@@ -1,10 +1,19 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`should render demo and match snapshot 1`] = `
 <div>
   <div class="van-nav-bar van-hairline--bottom">
     <div class="van-nav-bar__content">
-      <div class="van-nav-bar__left">
+      <div class="van-nav-bar__title van-ellipsis">
+        Title
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="van-nav-bar van-hairline--bottom">
+    <div class="van-nav-bar__content">
+      <div class="van-nav-bar__left van-haptics-feedback">
         <i class="van-badge__wrapper van-icon van-icon-arrow-left van-nav-bar__arrow">
         </i>
         <span class="van-nav-bar__text">
@@ -14,7 +23,23 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-nav-bar__title van-ellipsis">
         Title
       </div>
-      <div class="van-nav-bar__right">
+    </div>
+  </div>
+</div>
+<div>
+  <div class="van-nav-bar van-hairline--bottom">
+    <div class="van-nav-bar__content">
+      <div class="van-nav-bar__left van-haptics-feedback">
+        <i class="van-badge__wrapper van-icon van-icon-arrow-left van-nav-bar__arrow">
+        </i>
+        <span class="van-nav-bar__text">
+          Back
+        </span>
+      </div>
+      <div class="van-nav-bar__title van-ellipsis">
+        Title
+      </div>
+      <div class="van-nav-bar__right van-haptics-feedback">
         <span class="van-nav-bar__text">
           Button
         </span>
@@ -25,7 +50,7 @@ exports[`should render demo and match snapshot 1`] = `
 <div>
   <div class="van-nav-bar van-hairline--bottom">
     <div class="van-nav-bar__content">
-      <div class="van-nav-bar__left">
+      <div class="van-nav-bar__left van-haptics-feedback">
         <i class="van-badge__wrapper van-icon van-icon-arrow-left van-nav-bar__arrow">
         </i>
         <span class="van-nav-bar__text">
@@ -35,11 +60,33 @@ exports[`should render demo and match snapshot 1`] = `
       <div class="van-nav-bar__title van-ellipsis">
         Title
       </div>
-      <div class="van-nav-bar__right">
-        <i class="van-badge__wrapper van-icon van-icon-search"
-           style="font-size: 18px;"
+      <div class="van-nav-bar__right van-haptics-feedback">
+        <i
+          class="van-badge__wrapper van-icon van-icon-search"
+          style="font-size: 18px;"
         >
         </i>
+      </div>
+    </div>
+  </div>
+</div>
+<div>
+  <div class="van-nav-bar van-hairline--bottom">
+    <div class="van-nav-bar__content">
+      <div class="van-nav-bar__left van-nav-bar__left--disabled">
+        <i class="van-badge__wrapper van-icon van-icon-arrow-left van-nav-bar__arrow">
+        </i>
+        <span class="van-nav-bar__text">
+          Back
+        </span>
+      </div>
+      <div class="van-nav-bar__title van-ellipsis">
+        Title
+      </div>
+      <div class="van-nav-bar__right van-nav-bar__right--disabled">
+        <span class="van-nav-bar__text">
+          Button
+        </span>
       </div>
     </div>
   </div>

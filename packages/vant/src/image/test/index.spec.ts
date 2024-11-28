@@ -1,3 +1,4 @@
+import 'vitest-canvas-mock';
 import { mount } from '../../../test';
 import { Lazyload } from '../../lazyload';
 import VanImage from '..';
@@ -14,6 +15,19 @@ test('should emit load event after image loaded', async () => {
   await wrapper.find('img').trigger('load');
 
   expect(wrapper.emitted<[Event]>('load')![0][0]).toBeTruthy();
+  expect(wrapper.html()).toMatchSnapshot();
+});
+
+test('should pass props to img', async () => {
+  const wrapper = mount(VanImage, {
+    props: {
+      src: IMAGE_URL,
+      referrerpolicy: 'no-referrer',
+      crossorigin: 'anonymous',
+    },
+  });
+
+  await wrapper.find('img').trigger('load');
   expect(wrapper.html()).toMatchSnapshot();
 });
 
@@ -145,7 +159,7 @@ test('should change loading icon size when using icon-size prop', () => {
     },
   });
   expect(wrapper.find('.van-image__loading-icon').style.fontSize).toEqual(
-    '3rem'
+    '3rem',
   );
 });
 
@@ -190,7 +204,7 @@ test('should render default slot correctly', () => {
 //               setTimeout(() => {
 //                 hanlder({ el: null });
 //                 hanlder({ el: wrapper.find('img').element });
-//                 expect(wrapper.emitted('load').length).toEqual(1);
+//                 expect(wrapper.emitted('load')).toHaveLength(1);
 //                 expect(wrapper.html()).toMatchSnapshot();
 //                 wrapper.unmount();
 //               });
@@ -217,7 +231,7 @@ test('should render default slot correctly', () => {
 //             setTimeout(() => {
 //               hanlder({ el: null });
 //               hanlder({ el: wrapper.find('img').element });
-//               expect(wrapper.emitted('error').length).toEqual(1);
+//               expect(wrapper.emitted('error')).toHaveLength(1);
 //               expect(wrapper.html()).toMatchSnapshot();
 //               wrapper.unmount();
 //             });

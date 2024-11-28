@@ -1,4 +1,12 @@
-import { ref, watch, computed, PropType, defineComponent, nextTick } from 'vue';
+import {
+  ref,
+  watch,
+  computed,
+  nextTick,
+  defineComponent,
+  type PropType,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -15,6 +23,9 @@ import {
   createNamespace,
   callInterceptor,
   makeNumericProp,
+  HAPTICS_FEEDBACK,
+  LONG_PRESS_START_TIME,
+  type Numeric,
 } from '../utils';
 
 // Composables
@@ -23,40 +34,44 @@ import { useCustomFieldValue } from '@vant/use';
 const [name, bem] = createNamespace('stepper');
 
 const LONG_PRESS_INTERVAL = 200;
-const LONG_PRESS_START_TIME = 600;
 
-const isEqual = (value1?: string | number, value2?: string | number) =>
+const isEqual = (value1?: Numeric, value2?: Numeric) =>
   String(value1) === String(value2);
 
 export type StepperTheme = 'default' | 'round';
 
+export const stepperProps = {
+  min: makeNumericProp(1),
+  max: makeNumericProp(Infinity),
+  name: makeNumericProp(''),
+  step: makeNumericProp(1),
+  theme: String as PropType<StepperTheme>,
+  integer: Boolean,
+  disabled: Boolean,
+  showPlus: truthProp,
+  showMinus: truthProp,
+  showInput: truthProp,
+  longPress: truthProp,
+  autoFixed: truthProp,
+  allowEmpty: Boolean,
+  modelValue: numericProp,
+  inputWidth: numericProp,
+  buttonSize: numericProp,
+  placeholder: String,
+  disablePlus: Boolean,
+  disableMinus: Boolean,
+  disableInput: Boolean,
+  beforeChange: Function as PropType<Interceptor>,
+  defaultValue: makeNumericProp(1),
+  decimalLength: numericProp,
+};
+
+export type StepperProps = ExtractPropTypes<typeof stepperProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    min: makeNumericProp(1),
-    max: makeNumericProp(Infinity),
-    name: makeNumericProp(''),
-    step: makeNumericProp(1),
-    theme: String as PropType<StepperTheme>,
-    integer: Boolean,
-    disabled: Boolean,
-    showPlus: truthProp,
-    showMinus: truthProp,
-    showInput: truthProp,
-    longPress: truthProp,
-    allowEmpty: Boolean,
-    modelValue: numericProp,
-    inputWidth: numericProp,
-    buttonSize: numericProp,
-    placeholder: String,
-    disablePlus: Boolean,
-    disableMinus: Boolean,
-    disableInput: Boolean,
-    beforeChange: Function as PropType<Interceptor>,
-    defaultValue: makeNumericProp(1),
-    decimalLength: numericProp,
-  },
+  props: stepperProps,
 
   emits: [
     'plus',
@@ -69,7 +84,7 @@ export default defineComponent({
   ],
 
   setup(props, { emit }) {
-    const format = (value: string | number) => {
+    const format = (value: Numeric, autoFixed = true) => {
       const { min, max, allowEmpty, decimalLength } = props;
 
       if (allowEmpty && value === '') {
@@ -79,7 +94,9 @@ export default defineComponent({
       value = formatNumber(String(value), !props.integer);
       value = value === '' ? 0 : +value;
       value = Number.isNaN(value) ? +min : value;
-      value = Math.max(Math.min(+max, value), +min);
+
+      // whether to format the value entered by the user
+      value = autoFixed ? Math.max(Math.min(+max, value), +min) : value;
 
       // format decimal
       if (isDef(decimalLength)) {
@@ -105,11 +122,12 @@ export default defineComponent({
     const current = ref(getInitialValue());
 
     const minusDisabled = computed(
-      () => props.disabled || props.disableMinus || current.value <= +props.min
+      () =>
+        props.disabled || props.disableMinus || +current.value <= +props.min,
     );
 
     const plusDisabled = computed(
-      () => props.disabled || props.disablePlus || current.value >= +props.max
+      () => props.disabled || props.disablePlus || +current.value >= +props.max,
     );
 
     const inputStyle = computed(() => ({
@@ -126,7 +144,7 @@ export default defineComponent({
       }
     };
 
-    const setValue = (value: string | number) => {
+    const setValue = (value: Numeric) => {
       if (props.beforeChange) {
         callInterceptor(props.beforeChange, {
           args: [value],
@@ -190,7 +208,7 @@ export default defineComponent({
 
     const onBlur = (event: Event) => {
       const input = event.target as HTMLInputElement;
-      const value = format(input.value);
+      const value = format(input.value, props.autoFixed);
       input.value = String(value);
       current.value = value;
       nextTick(() => {
@@ -200,7 +218,7 @@ export default defineComponent({
     };
 
     let isLongPress: boolean;
-    let longPressTimer: NodeJS.Timeout;
+    let longPressTimer: ReturnType<typeof setTimeout>;
 
     const longPressStep = () => {
       longPressTimer = setTimeout(() => {
@@ -232,20 +250,20 @@ export default defineComponent({
 
     const onMousedown = (event: MouseEvent) => {
       // fix mobile safari page scroll down issue
-      // see: https://github.com/youzan/vant/issues/7690
+      // see: https://github.com/vant-ui/vant/issues/7690
       if (props.disableInput) {
-        event.preventDefault();
+        preventDefault(event);
       }
     };
 
-    const createListeners = (type: 'plus' | 'minus') => ({
+    const createListeners = (type: typeof actionType) => ({
       onClick: (event: MouseEvent) => {
         // disable double tap scrolling on mobile safari
-        event.preventDefault();
+        preventDefault(event);
         actionType = type;
         onChange();
       },
-      onTouchstart: () => {
+      onTouchstartPassive: () => {
         actionType = type;
         onTouchStart();
       },
@@ -254,13 +272,8 @@ export default defineComponent({
     });
 
     watch(
-      [
-        () => props.max,
-        () => props.min,
-        () => props.integer,
-        () => props.decimalLength,
-      ],
-      check
+      () => [props.max, props.min, props.integer, props.decimalLength],
+      check,
     );
 
     watch(
@@ -269,7 +282,7 @@ export default defineComponent({
         if (!isEqual(value, current.value)) {
           current.value = format(value!);
         }
-      }
+      },
     );
 
     watch(current, (value) => {
@@ -280,12 +293,16 @@ export default defineComponent({
     useCustomFieldValue(() => props.modelValue);
 
     return () => (
-      <div class={bem([props.theme])}>
+      <div role="group" class={bem([props.theme])}>
         <button
           v-show={props.showMinus}
           type="button"
           style={buttonStyle.value}
-          class={bem('minus', { disabled: minusDisabled.value })}
+          class={[
+            bem('minus', { disabled: minusDisabled.value }),
+            { [HAPTICS_FEEDBACK]: !minusDisabled.value },
+          ]}
+          aria-disabled={minusDisabled.value || undefined}
           {...createListeners('minus')}
         />
         <input
@@ -301,9 +318,10 @@ export default defineComponent({
           // set keyboard in modern browsers
           inputmode={props.integer ? 'numeric' : 'decimal'}
           placeholder={props.placeholder}
-          aria-valuemax={+props.max}
-          aria-valuemin={+props.min}
-          aria-valuenow={+current.value}
+          autocomplete="off"
+          aria-valuemax={props.max}
+          aria-valuemin={props.min}
+          aria-valuenow={current.value}
           onBlur={onBlur}
           onInput={onInput}
           onFocus={onFocus}
@@ -313,7 +331,11 @@ export default defineComponent({
           v-show={props.showPlus}
           type="button"
           style={buttonStyle.value}
-          class={bem('plus', { disabled: plusDisabled.value })}
+          class={[
+            bem('plus', { disabled: plusDisabled.value }),
+            { [HAPTICS_FEEDBACK]: !plusDisabled.value },
+          ]}
+          aria-disabled={plusDisabled.value || undefined}
           {...createListeners('plus')}
         />
       </div>

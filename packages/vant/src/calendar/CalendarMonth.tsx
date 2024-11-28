@@ -1,9 +1,9 @@
 import {
   ref,
   computed,
-  PropType,
   defineComponent,
-  ExtractPropTypes,
+  type PropType,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -15,7 +15,7 @@ import {
   createNamespace,
   makeRequiredProp,
 } from '../utils';
-import { getMonthEndDay } from '../datetime-picker/utils';
+import { getMonthEndDay } from '../date-picker/utils';
 import {
   t,
   bem,
@@ -38,12 +38,12 @@ import type { CalendarType, CalendarDayItem, CalendarDayType } from './types';
 
 const [name] = createNamespace('calendar-month');
 
-const props = {
+const calendarMonthProps = {
   date: makeRequiredProp(Date),
   type: String as PropType<CalendarType>,
   color: String,
-  minDate: makeRequiredProp(Date),
-  maxDate: makeRequiredProp(Date),
+  minDate: Date,
+  maxDate: Date,
   showMark: Boolean,
   rowHeight: numericProp,
   formatter: Function as PropType<(item: CalendarDayItem) => CalendarDayItem>,
@@ -55,14 +55,14 @@ const props = {
   firstDayOfWeek: Number,
 };
 
-export type CalendarMonthProps = ExtractPropTypes<typeof props>;
+export type CalendarMonthProps = ExtractPropTypes<typeof calendarMonthProps>;
 
 export default defineComponent({
   name,
 
-  props,
+  props: calendarMonthProps,
 
-  emits: ['click', 'update-height'],
+  emits: ['click', 'clickDisabledDate'],
 
   setup(props, { emit, slots }) {
     const [visible, setVisible] = useToggle();
@@ -73,35 +73,29 @@ export default defineComponent({
     const title = computed(() => formatMonthTitle(props.date));
     const rowHeight = computed(() => addUnit(props.rowHeight));
     const offset = computed(() => {
-      const realDay = props.date.getDay();
+      const date = props.date.getDate();
+      const day = props.date.getDay();
+      const realDay = (day - (date % 7) + 8) % 7;
 
       if (props.firstDayOfWeek) {
         return (realDay + 7 - props.firstDayOfWeek) % 7;
       }
+
       return realDay;
     });
 
     const totalDay = computed(() =>
-      getMonthEndDay(props.date.getFullYear(), props.date.getMonth() + 1)
+      getMonthEndDay(props.date.getFullYear(), props.date.getMonth() + 1),
     );
 
     const shouldRender = computed(() => visible.value || !props.lazyRender);
 
     const getTitle = () => title.value;
 
-    const scrollIntoView = (body: Element) => {
-      const el = props.showSubtitle ? daysRef.value : monthRef.value;
-
-      if (el) {
-        const scrollTop = useRect(el).top - useRect(body).top + body.scrollTop;
-        setScrollTop(body, scrollTop);
-      }
-    };
-
     const getMultipleDayType = (day: Date) => {
       const isSelected = (date: Date) =>
         (props.currentDate as Date[]).some(
-          (item) => compareDay(item, date) === 0
+          (item) => compareDay(item, date) === 0,
         );
 
       if (isSelected(day)) {
@@ -159,7 +153,10 @@ export default defineComponent({
     const getDayType = (day: Date): CalendarDayType => {
       const { type, minDate, maxDate, currentDate } = props;
 
-      if (compareDay(day, minDate) < 0 || compareDay(day, maxDate) > 0) {
+      if (
+        (minDate && compareDay(day, minDate) < 0) ||
+        (maxDate && compareDay(day, maxDate) > 0)
+      ) {
         return 'disabled';
       }
 
@@ -187,14 +184,23 @@ export default defineComponent({
           return t(dayType);
         }
         if (dayType === 'start-end') {
-          return t('startEnd');
+          return `${t('start')}/${t('end')}`;
         }
       }
     };
 
     const renderTitle = () => {
       if (props.showMonthTitle) {
-        return <div class={bem('month-title')}>{title.value}</div>;
+        return (
+          <div class={bem('month-title')}>
+            {slots['month-title']
+              ? slots['month-title']({
+                  date: props.date,
+                  text: title.value,
+                })
+              : title.value}
+          </div>
+        );
       }
     };
 
@@ -236,18 +242,33 @@ export default defineComponent({
     });
 
     const disabledDays = computed(() =>
-      days.value.filter((day) => day.type === 'disabled')
+      days.value.filter((day) => day.type === 'disabled'),
     );
+
+    const scrollToDate = (body: Element, targetDate: Date) => {
+      if (daysRef.value) {
+        const daysRect = useRect(daysRef.value);
+        const totalRows = placeholders.value.length;
+        const currentRow = Math.ceil((targetDate.getDate() + offset.value) / 7);
+        const rowOffset = ((currentRow - 1) * daysRect.height) / totalRows;
+
+        setScrollTop(
+          body,
+          daysRect.top + rowOffset + body.scrollTop - useRect(body).top,
+        );
+      }
+    };
 
     const renderDay = (item: CalendarDayItem, index: number) => (
       <CalendarDay
-        v-slots={pick(slots, ['top-info', 'bottom-info'])}
+        v-slots={pick(slots, ['top-info', 'bottom-info', 'text'])}
         item={item}
         index={index}
         color={props.color}
         offset={offset.value}
         rowHeight={rowHeight.value}
         onClick={(item) => emit('click', item)}
+        onClickDisabledDate={(item) => emit('clickDisabledDate', item)}
       />
     );
 
@@ -262,7 +283,7 @@ export default defineComponent({
       getTitle,
       getHeight: () => height.value,
       setVisible,
-      scrollIntoView,
+      scrollToDate,
       disabledDays,
     });
 

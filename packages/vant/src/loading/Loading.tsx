@@ -1,4 +1,4 @@
-import { computed, defineComponent } from 'vue';
+import { computed, defineComponent, type ExtractPropTypes } from 'vue';
 import {
   extend,
   addUnit,
@@ -22,22 +22,35 @@ const CircularIcon = (
 
 export type LoadingType = 'circular' | 'spinner';
 
+export const loadingProps = {
+  size: numericProp,
+  type: makeStringProp<LoadingType>('circular'),
+  color: String,
+  vertical: Boolean,
+  textSize: numericProp,
+  textColor: String,
+};
+
+export type LoadingProps = ExtractPropTypes<typeof loadingProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    size: numericProp,
-    type: makeStringProp<LoadingType>('circular'),
-    color: String,
-    vertical: Boolean,
-    textSize: numericProp,
-    textColor: String,
-  },
+  props: loadingProps,
 
   setup(props, { slots }) {
     const spinnerStyle = computed(() =>
-      extend({ color: props.color }, getSizeStyle(props.size))
+      extend({ color: props.color }, getSizeStyle(props.size)),
     );
+
+    const renderIcon = () => {
+      const DefaultIcon = props.type === 'spinner' ? SpinIcon : CircularIcon;
+      return (
+        <span class={bem('spinner', props.type)} style={spinnerStyle.value}>
+          {slots.icon ? slots.icon() : DefaultIcon}
+        </span>
+      );
+    };
 
     const renderText = () => {
       if (slots.default) {
@@ -58,10 +71,12 @@ export default defineComponent({
     return () => {
       const { type, vertical } = props;
       return (
-        <div class={bem([type, { vertical }])}>
-          <span class={bem('spinner', type)} style={spinnerStyle.value}>
-            {type === 'spinner' ? SpinIcon : CircularIcon}
-          </span>
+        <div
+          class={bem([type, { vertical }])}
+          aria-live="polite"
+          aria-busy={true}
+        >
+          {renderIcon()}
           {renderText()}
         </div>
       );

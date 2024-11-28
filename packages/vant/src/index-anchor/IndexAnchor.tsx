@@ -1,4 +1,11 @@
-import { ref, reactive, computed, CSSProperties, defineComponent } from 'vue';
+import {
+  ref,
+  reactive,
+  computed,
+  defineComponent,
+  type CSSProperties,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -17,12 +24,16 @@ import { useExpose } from '../composables/use-expose';
 
 const [name, bem] = createNamespace('index-anchor');
 
+export const indexAnchorProps = {
+  index: numericProp,
+};
+
+export type IndexAnchorProps = ExtractPropTypes<typeof indexAnchorProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    index: numericProp,
-  },
+  props: indexAnchorProps,
 
   setup(props, { slots }) {
     const state = reactive({
@@ -39,7 +50,7 @@ export default defineComponent({
     if (!parent) {
       if (process.env.NODE_ENV !== 'production') {
         console.error(
-          '[Vant] <IndexAnchor> must be a child component of <IndexBar>.'
+          '[Vant] <IndexAnchor> must be a child component of <IndexBar>.',
         );
       }
       return;
@@ -64,7 +75,7 @@ export default defineComponent({
 
     const getRect = (
       scrollParent: Window | Element,
-      scrollParentRect: { top: number }
+      scrollParentRect: { top: number },
     ) => {
       const rootRect = useRect(root);
       state.rect.height = rootRect.height;

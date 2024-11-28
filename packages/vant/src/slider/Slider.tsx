@@ -1,4 +1,11 @@
-import { ref, computed, PropType, CSSProperties, defineComponent } from 'vue';
+import {
+  ref,
+  computed,
+  defineComponent,
+  type PropType,
+  type CSSProperties,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -6,6 +13,7 @@ import {
   addUnit,
   addNumber,
   numericProp,
+  isSameValue,
   getSizeStyle,
   preventDefault,
   stopPropagation,
@@ -14,7 +22,7 @@ import {
 } from '../utils';
 
 // Composables
-import { useRect, useCustomFieldValue } from '@vant/use';
+import { useRect, useCustomFieldValue, useEventListener } from '@vant/use';
 import { useTouch } from '../composables/use-touch';
 
 const [name, bem] = createNamespace('slider');
@@ -23,29 +31,33 @@ type NumberRange = [number, number];
 
 type SliderValue = number | NumberRange;
 
+export const sliderProps = {
+  min: makeNumericProp(0),
+  max: makeNumericProp(100),
+  step: makeNumericProp(1),
+  range: Boolean,
+  reverse: Boolean,
+  disabled: Boolean,
+  readonly: Boolean,
+  vertical: Boolean,
+  barHeight: numericProp,
+  buttonSize: numericProp,
+  activeColor: String,
+  inactiveColor: String,
+  modelValue: {
+    type: [Number, Array] as PropType<SliderValue>,
+    default: 0,
+  },
+};
+
+export type SliderProps = ExtractPropTypes<typeof sliderProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    min: makeNumericProp(0),
-    max: makeNumericProp(100),
-    step: makeNumericProp(1),
-    range: Boolean,
-    reverse: Boolean,
-    disabled: Boolean,
-    readonly: Boolean,
-    vertical: Boolean,
-    barHeight: numericProp,
-    buttonSize: numericProp,
-    activeColor: String,
-    inactiveColor: String,
-    modelValue: {
-      type: [Number, Array] as PropType<SliderValue>,
-      default: 0,
-    },
-  },
+  props: sliderProps,
 
-  emits: ['change', 'drag-end', 'drag-start', 'update:modelValue'],
+  emits: ['change', 'dragEnd', 'dragStart', 'update:modelValue'],
 
   setup(props, { emit, slots }) {
     let buttonIndex: 0 | 1;
@@ -53,6 +65,7 @@ export default defineComponent({
     let startValue: SliderValue;
 
     const root = ref<HTMLElement>();
+    const slider = [ref<HTMLElement>(), ref<HTMLElement>()] as const;
     const dragStatus = ref<'start' | 'dragging' | ''>();
     const touch = useTouch();
 
@@ -120,8 +133,14 @@ export default defineComponent({
       return addNumber(min, diff);
     };
 
-    const isSameValue = (newValue: SliderValue, oldValue: SliderValue) =>
-      JSON.stringify(newValue) === JSON.stringify(oldValue);
+    const updateStartValue = () => {
+      const current = props.modelValue;
+      if (isRange(current)) {
+        startValue = current.map(format) as NumberRange;
+      } else {
+        startValue = format(current);
+      }
+    };
 
     const handleRangeValue = (value: NumberRange) => {
       // 设置默认值
@@ -153,6 +172,8 @@ export default defineComponent({
       if (props.disabled || props.readonly) {
         return;
       }
+
+      updateStartValue();
 
       const { min, reverse, vertical, modelValue } = props;
       const rect = useRect(root);
@@ -194,12 +215,7 @@ export default defineComponent({
 
       touch.start(event);
       current = props.modelValue;
-
-      if (isRange(current)) {
-        startValue = current.map(format) as NumberRange;
-      } else {
-        startValue = format(current);
-      }
+      updateStartValue();
 
       dragStatus.value = 'start';
     };
@@ -210,7 +226,7 @@ export default defineComponent({
       }
 
       if (dragStatus.value === 'start') {
-        emit('drag-start', event);
+        emit('dragStart', event);
       }
 
       preventDefault(event, true);
@@ -242,7 +258,7 @@ export default defineComponent({
 
       if (dragStatus.value === 'dragging') {
         updateValue(current, true);
-        emit('drag-end', event);
+        emit('dragEnd', event);
       }
 
       dragStatus.value = '';
@@ -257,15 +273,23 @@ export default defineComponent({
     };
 
     const renderButtonContent = (value: number, index?: 0 | 1) => {
+      const dragging = dragStatus.value === 'dragging';
+
       if (typeof index === 'number') {
         const slot = slots[index === 0 ? 'left-button' : 'right-button'];
+        let dragIndex;
+
+        if (dragging && Array.isArray(current)) {
+          dragIndex = current[0] > current[1] ? buttonIndex ^ 1 : buttonIndex;
+        }
+
         if (slot) {
-          return slot({ value });
+          return slot({ value, dragging, dragIndex });
         }
       }
 
       if (slots.button) {
-        return slots.button({ value });
+        return slots.button({ value, dragging });
       }
 
       return (
@@ -281,21 +305,23 @@ export default defineComponent({
 
       return (
         <div
+          ref={slider[index ?? 0]}
           role="slider"
           class={getButtonClassName(index)}
-          tabindex={props.disabled || props.readonly ? -1 : 0}
-          aria-valuemin={+props.min}
+          tabindex={props.disabled ? undefined : 0}
+          aria-valuemin={props.min}
           aria-valuenow={current}
-          aria-valuemax={+props.max}
+          aria-valuemax={props.max}
+          aria-disabled={props.disabled || undefined}
+          aria-readonly={props.readonly || undefined}
           aria-orientation={props.vertical ? 'vertical' : 'horizontal'}
-          onTouchstart={(event) => {
+          onTouchstartPassive={(event) => {
             if (typeof index === 'number') {
               // save index of current button
               buttonIndex = index;
             }
             onTouchStart(event);
           }}
-          onTouchmove={onTouchMove}
           onTouchend={onTouchEnd}
           onTouchcancel={onTouchEnd}
           onClick={stopPropagation}
@@ -308,6 +334,13 @@ export default defineComponent({
     // format initial value
     updateValue(props.modelValue);
     useCustomFieldValue(() => props.modelValue);
+
+    slider.forEach((item) => {
+      // useEventListener will set passive to `false` to eliminate the warning of Chrome
+      useEventListener('touchmove', onTouchMove, {
+        target: item,
+      });
+    });
 
     return () => (
       <div

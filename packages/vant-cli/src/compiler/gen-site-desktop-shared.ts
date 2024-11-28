@@ -1,20 +1,13 @@
 import glob from 'fast-glob';
-import { join, parse } from 'path';
-import { existsSync, readFileSync, readdirSync } from 'fs-extra';
-import {
-  pascalize,
-  getVantConfig,
-  smartOutputFile,
-  normalizePath,
-  isDev,
-} from '../common';
+import { join, parse } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { pascalize, getVantConfig, normalizePath } from '../common/index.js';
 import {
   SRC_DIR,
   DOCS_DIR,
   getPackageJson,
   VANT_CONFIG_FILE,
-  SITE_DESKTOP_SHARED_FILE,
-} from '../common/constant';
+} from '../common/constant.js';
 
 type DocumentItem = {
   name: string;
@@ -82,10 +75,7 @@ function genImportDocuments(items: DocumentItem[]) {
   return items
     .map((item) => {
       const path = normalizePath(item.path);
-      if (isDev()) {
-        return `const ${item.name} = () => import('${path}');`;
-      }
-      return `import ${item.name} from '${path}';`;
+      return `const ${item.name} = () => import('${path}');`;
     })
     .join('\n');
 }
@@ -98,7 +88,7 @@ function genExportDocuments(items: DocumentItem[]) {
 
 function genVantConfigContent() {
   const content = readFileSync(VANT_CONFIG_FILE, 'utf-8');
-  return content.replace('module.exports', 'const config');
+  return content.replace('export default', 'const config =');
 }
 
 function genExportConfig() {
@@ -122,5 +112,5 @@ ${genExportDocuments(documents)}
 ${genExportVersion()}
 `;
 
-  smartOutputFile(SITE_DESKTOP_SHARED_FILE, code);
+  return code;
 }

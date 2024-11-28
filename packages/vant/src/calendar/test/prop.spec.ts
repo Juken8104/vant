@@ -2,36 +2,7 @@ import { Calendar } from '..';
 import { mount, later } from '../../../test';
 import { minDate, maxDate } from './utils';
 
-test('max-range prop when type is range and showConfirm is false', async () => {
-  const wrapper = mount(Calendar, {
-    props: {
-      type: 'range',
-      minDate,
-      maxDate,
-      maxRange: 3,
-      poppable: false,
-      showConfirm: false,
-      lazyRender: false,
-    },
-  });
-
-  await later();
-
-  const days = wrapper.findAll('.van-calendar__day');
-  days[12].trigger('click');
-  days[18].trigger('click');
-
-  expect(wrapper.emitted<[Date]>('select')![0][0]).toEqual([
-    new Date(2010, 0, 13),
-  ]);
-  expect(wrapper.emitted<[Date]>('select')![1][0]).toEqual([
-    new Date(2010, 0, 13),
-    new Date(2010, 0, 19),
-  ]);
-  expect(wrapper.emitted('confirm')).toBeFalsy();
-});
-
-test('max-range prop when type is range and showConfirm is true', async () => {
+test('should limit max range when using max-range prop and type is range', async () => {
   const wrapper = mount(Calendar, {
     props: {
       type: 'range',
@@ -59,7 +30,7 @@ test('max-range prop when type is range and showConfirm is true', async () => {
   expect(wrapper.emitted('confirm')).toBeFalsy();
 });
 
-test('max-range prop when type is multiple', async () => {
+test('should limit max range when using max-range prop and type is multiple', async () => {
   const wrapper = mount(Calendar, {
     props: {
       type: 'multiple',
@@ -123,7 +94,7 @@ test('hide close icon when there is no title', async () => {
 });
 
 test('allow-same-day prop', async () => {
-  const onSelect = jest.fn();
+  const onSelect = vi.fn();
   const wrapper = mount(Calendar, {
     props: {
       type: 'range',
@@ -163,7 +134,7 @@ test('min-date after current time', () => {
 
   wrapper.find('.van-calendar__confirm').trigger('click');
   expect(wrapper.emitted<[Date]>('confirm')![0][0]).toEqual(
-    new Date(2200, 0, 1)
+    new Date(2200, 0, 1),
   );
 });
 
@@ -179,7 +150,7 @@ test('min-date before current time', () => {
 
   wrapper.find('.van-calendar__confirm').trigger('click');
   expect(wrapper.emitted<[Date]>('confirm')![0][0]).toEqual(
-    new Date(1800, 0, 2)
+    new Date(1800, 0, 2),
   );
 });
 
@@ -196,7 +167,7 @@ test('lazy-render prop', () => {
   expect(wrapper.html()).toMatchSnapshot();
 });
 
-test('month-show event', async () => {
+test('monthShow event', async () => {
   const wrapper = mount(Calendar, {
     props: {
       show: true,
@@ -204,7 +175,7 @@ test('month-show event', async () => {
   });
   await later(200);
 
-  expect(wrapper.emitted('month-show')).toBeTruthy();
+  expect(wrapper.emitted('monthShow')).toBeTruthy();
 });
 
 test('first day of week', async () => {
@@ -224,7 +195,7 @@ test('first day of week', async () => {
   expect(wrapper.findAll('.van-calendar__weekday')[0].text()).toEqual('Tue');
 
   const day = wrapper.find(
-    '.van-calendar__month:first-of-type .van-calendar__day'
+    '.van-calendar__month:first-of-type .van-calendar__day',
   );
   expect(day.text()).toEqual('1');
   expect(day.attributes('style')).toContain(`margin-left: ${(100 * 4) / 7}%`);
@@ -277,8 +248,8 @@ test('should disabled prompt when using show-range-prompt prop', async () => {
   expect(document.querySelector('.van-toast')).toBeFalsy();
 });
 
-test('should emit over-range when exceeded max range', async () => {
-  const onOverRange = jest.fn();
+test('should emit overRange when exceeded max range', async () => {
+  const onOverRange = vi.fn();
   const wrapper = mount(Calendar, {
     props: {
       type: 'range',
@@ -298,4 +269,69 @@ test('should emit over-range when exceeded max range', async () => {
   days[18].trigger('click');
 
   expect(onOverRange).toHaveBeenCalledTimes(1);
+});
+
+test('should allow default date to be minDate when using allowSameDay prop', () => {
+  const minDate = new Date(1800, 0, 1);
+  const maxDate = new Date(1800, 0, 29);
+  const wrapper = mount(Calendar, {
+    props: {
+      type: 'range',
+      poppable: false,
+      minDate,
+      maxDate,
+      defaultDate: [minDate, minDate],
+      lazyRender: false,
+      allowSameDay: true,
+    },
+  });
+
+  wrapper.find('.van-calendar__confirm').trigger('click');
+  expect(wrapper.emitted<[Date]>('confirm')![0][0]).toEqual([minDate, minDate]);
+});
+
+test('should allow default date to be maxDate when using allowSameDay prop', () => {
+  const minDate = new Date(1800, 0, 1);
+  const maxDate = new Date(1800, 0, 29);
+  const wrapper = mount(Calendar, {
+    props: {
+      type: 'range',
+      poppable: false,
+      minDate,
+      maxDate,
+      defaultDate: [maxDate, maxDate],
+      lazyRender: false,
+      allowSameDay: true,
+    },
+  });
+
+  wrapper.find('.van-calendar__confirm').trigger('click');
+  expect(wrapper.emitted<[Date]>('confirm')![0][0]).toEqual([maxDate, maxDate]);
+});
+
+test('should call reset when defaultDate prop changes', async () => {
+  const wrapper = mount(Calendar, {
+    props: {
+      poppable: false,
+      defaultDate: undefined,
+      minDate,
+      maxDate,
+    },
+  });
+
+  wrapper.find('.van-calendar__confirm').trigger('click');
+  expect(wrapper.emitted<[Date]>('confirm')![0][0]).toEqual(maxDate);
+
+  await wrapper.setProps({ defaultDate: minDate });
+  wrapper.find('.van-calendar__confirm').trigger('click');
+  expect(wrapper.emitted<[Date]>('confirm')![1][0]).toEqual(minDate);
+
+  await wrapper.setProps({ defaultDate: null });
+  expect(wrapper.find('.van-calendar__confirm').classes()).toContain(
+    'van-button--disabled',
+  );
+
+  await wrapper.setProps({ defaultDate: undefined });
+  wrapper.find('.van-calendar__confirm').trigger('click');
+  expect(wrapper.emitted<[Date]>('confirm')![2][0]).toEqual(maxDate);
 });

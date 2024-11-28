@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue';
+import { defineComponent, type ExtractPropTypes } from 'vue';
 import {
   addUnit,
   truthProp,
@@ -12,18 +12,22 @@ import {
 
 const [name, bem] = createNamespace('password-input');
 
+export const passwordInputProps = {
+  info: String,
+  mask: truthProp,
+  value: makeStringProp(''),
+  gutter: numericProp,
+  length: makeNumericProp(6),
+  focused: Boolean,
+  errorInfo: String,
+};
+
+export type PasswordInputProps = ExtractPropTypes<typeof passwordInputProps>;
+
 export default defineComponent({
   name,
 
-  props: {
-    info: String,
-    mask: truthProp,
-    value: makeStringProp(''),
-    gutter: numericProp,
-    length: makeNumericProp(6),
-    focused: Boolean,
-    errorInfo: String,
-  },
+  props: passwordInputProps,
 
   emits: ['focus'],
 
@@ -35,7 +39,8 @@ export default defineComponent({
 
     const renderPoints = () => {
       const Points: JSX.Element[] = [];
-      const { mask, value, length, gutter, focused } = props;
+      const { mask, value, gutter, focused } = props;
+      const length = +props.length;
 
       for (let i = 0; i < length; i++) {
         const char = value[i];
@@ -61,7 +66,7 @@ export default defineComponent({
               char
             )}
             {showCursor && <div class={bem('cursor')} />}
-          </li>
+          </li>,
         );
       }
 
@@ -74,7 +79,7 @@ export default defineComponent({
         <div class={bem()}>
           <ul
             class={[bem('security'), { [BORDER_SURROUND]: !props.gutter }]}
-            onTouchstart={onTouchStart}
+            onTouchstartPassive={onTouchStart}
           >
             {renderPoints()}
           </ul>

@@ -1,5 +1,6 @@
 import { Rate } from '..';
-import { mount, triggerDrag } from '../../../test';
+import { mount, trigger, triggerDrag } from '../../../test';
+import { TAP_OFFSET } from '../../utils';
 import type { DOMWrapper } from '@vue/test-utils';
 
 function mockGetBoundingClientRect(items: DOMWrapper<Element>[]) {
@@ -8,7 +9,9 @@ function mockGetBoundingClientRect(items: DOMWrapper<Element>[]) {
       ({
         left: index * 25,
         width: 25,
-      } as DOMRect);
+        top: 0,
+        height: 25,
+      }) as DOMRect;
     return true;
   });
 }
@@ -18,15 +21,15 @@ test('should emit change and update:modelValue event when rate icon is clicked',
   const item4 = wrapper.findAll('.van-rate__icon')[3];
 
   item4.trigger('click');
-  expect(wrapper.emitted('change')!.length).toEqual(1);
+  expect(wrapper.emitted('change')).toHaveLength(1);
   expect(wrapper.emitted('change')![0]).toEqual([4]);
-  expect(wrapper.emitted('update:modelValue')!.length).toEqual(1);
+  expect(wrapper.emitted('update:modelValue')).toHaveLength(1);
   expect(wrapper.emitted('update:modelValue')![0]).toEqual([4]);
 
   await wrapper.setProps({ modelValue: 4 });
   item4.trigger('click');
-  expect(wrapper.emitted('change')!.length).toEqual(1);
-  expect(wrapper.emitted('update:modelValue')!.length).toEqual(1);
+  expect(wrapper.emitted('change')).toHaveLength(1);
+  expect(wrapper.emitted('update:modelValue')).toHaveLength(1);
 });
 
 test('should not emit change and update:modelValue event when rate is not changed', () => {
@@ -138,4 +141,28 @@ test('should render correct count when using string prop', () => {
   const icons = wrapper.findAll('.van-rate__item');
 
   expect(icons).toHaveLength(4);
+});
+
+test('should reset value to 0 when using clearable prop', () => {
+  const wrapper = mount(Rate, {
+    props: {
+      modelValue: 4,
+      clearable: true,
+    },
+  });
+  const icons = wrapper.findAll('.van-rate__item');
+  const item4 = wrapper.findAll('.van-rate__icon')[3];
+  mockGetBoundingClientRect(icons);
+
+  trigger(wrapper, 'touchstart', 80, 0);
+  trigger(wrapper, 'touchmove', 80 + TAP_OFFSET, 0);
+  item4.trigger('click');
+  expect(wrapper.emitted('change')![0]).toEqual([0]);
+  expect(wrapper.emitted('update:modelValue')![0]).toEqual([0]);
+
+  trigger(wrapper, 'touchstart', 80, 0);
+  trigger(wrapper, 'touchmove', 80 + TAP_OFFSET + 1, 0);
+  item4.trigger('click');
+  expect(wrapper.emitted('change')).toHaveLength(1);
+  expect(wrapper.emitted('update:modelValue')).toHaveLength(1);
 });

@@ -1,5 +1,5 @@
-import { PropType, CSSProperties, TeleportProps } from 'vue';
 import { truthProp, unknownProp, Interceptor, numericProp } from '../utils';
+import type { PropType, CSSProperties, TeleportProps } from 'vue';
 
 export const popupSharedProps = {
   // whether to show popup
@@ -31,5 +31,5 @@ export const popupSharedProps = {
 export type PopupSharedPropKeys = Array<keyof typeof popupSharedProps>;
 
 export const popupSharedPropKeys = Object.keys(
-  popupSharedProps
+  popupSharedProps,
 ) as PopupSharedPropKeys;

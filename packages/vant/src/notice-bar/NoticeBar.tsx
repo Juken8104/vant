@@ -2,9 +2,9 @@ import {
   ref,
   watch,
   reactive,
-  PropType,
   defineComponent,
-  ExtractPropTypes,
+  type PropType,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -29,7 +29,7 @@ import { NoticeBarMode } from './types';
 
 const [name, bem] = createNamespace('notice-bar');
 
-const props = {
+export const noticeBarProps = {
   text: String,
   mode: String as PropType<NoticeBarMode>,
   color: String,
@@ -44,19 +44,19 @@ const props = {
   },
 };
 
-export type NoticeBarProps = ExtractPropTypes<typeof props>;
+export type NoticeBarProps = ExtractPropTypes<typeof noticeBarProps>;
 
 export default defineComponent({
   name,
 
-  props,
+  props: noticeBarProps,
 
   emits: ['close', 'replay'],
 
   setup(props, { emit, slots }) {
     let wrapWidth = 0;
     let contentWidth = 0;
-    let startTimer: NodeJS.Timeout;
+    let startTimer: ReturnType<typeof setTimeout>;
 
     const wrapRef = ref<HTMLElement>();
     const contentRef = ref<HTMLElement>();

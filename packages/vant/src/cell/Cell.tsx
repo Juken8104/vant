@@ -1,4 +1,9 @@
-import { PropType, CSSProperties, defineComponent } from 'vue';
+import {
+  defineComponent,
+  type PropType,
+  type CSSProperties,
+  type ExtractPropTypes,
+} from 'vue';
 
 // Utils
 import {
@@ -7,6 +12,7 @@ import {
   truthProp,
   unknownProp,
   numericProp,
+  makeStringProp,
   createNamespace,
 } from '../utils';
 
@@ -18,44 +24,46 @@ import { Icon } from '../icon';
 
 const [name, bem] = createNamespace('cell');
 
+export type CellSize = 'normal' | 'large';
+
 export type CellArrowDirection = 'up' | 'down' | 'left' | 'right';
 
-export const cellProps = {
+export const cellSharedProps = {
+  tag: makeStringProp<keyof HTMLElementTagNameMap>('div'),
   icon: String,
-  size: String as PropType<'large'>,
+  size: String as PropType<CellSize>,
   title: numericProp,
   value: numericProp,
   label: numericProp,
   center: Boolean,
   isLink: Boolean,
   border: truthProp,
-  required: Boolean,
   iconPrefix: String,
   valueClass: unknownProp,
   labelClass: unknownProp,
   titleClass: unknownProp,
   titleStyle: null as unknown as PropType<string | CSSProperties>,
   arrowDirection: String as PropType<CellArrowDirection>,
+  required: {
+    type: [Boolean, String] as PropType<boolean | 'auto'>,
+    default: null,
+  },
   clickable: {
     type: Boolean as PropType<boolean | null>,
     default: null,
   },
 };
 
+export const cellProps = extend({}, cellSharedProps, routeProps);
+
+export type CellProps = ExtractPropTypes<typeof cellProps>;
+
 export default defineComponent({
   name,
 
-  props: extend({}, cellProps, routeProps),
+  props: cellProps,
 
   setup(props, { slots }) {
-    if (process.env.NODE_ENV !== 'production') {
-      if (slots.default) {
-        console.warn(
-          '[Vant] Cell: "default" slot is deprecated, please use "value" slot instead.'
-        );
-      }
-    }
-
     const route = useRoute();
 
     const renderLabel = () => {
@@ -72,12 +80,20 @@ export default defineComponent({
 
     const renderTitle = () => {
       if (slots.title || isDef(props.title)) {
+        const titleSlot = slots.title?.();
+
+        // Allow Field to dynamically set empty label
+        // https://github.com/youzan/vant/issues/11368
+        if (Array.isArray(titleSlot) && titleSlot.length === 0) {
+          return;
+        }
+
         return (
           <div
             class={[bem('title'), props.titleClass]}
             style={props.titleStyle}
           >
-            {slots.title ? slots.title() : <span>{props.title}</span>}
+            {titleSlot || <span>{props.title}</span>}
             {renderLabel()}
           </div>
         );
@@ -85,15 +101,13 @@ export default defineComponent({
     };
 
     const renderValue = () => {
-      // default slot is deprecated
-      // should be removed in next major version
+      // slots.default is an alias of slots.value
       const slot = slots.value || slots.default;
       const hasValue = slot || isDef(props.value);
 
       if (hasValue) {
-        const hasTitle = slots.title || isDef(props.title);
         return (
-          <div class={[bem('value', { alone: !hasTitle }), props.valueClass]}>
+          <div class={[bem('value'), props.valueClass]}>
             {slot ? slot() : <span>{props.value}</span>}
           </div>
         );
@@ -122,20 +136,21 @@ export default defineComponent({
       }
 
       if (props.isLink) {
-        const name = props.arrowDirection
-          ? `arrow-${props.arrowDirection}`
-          : 'arrow';
+        const name =
+          props.arrowDirection && props.arrowDirection !== 'right'
+            ? `arrow-${props.arrowDirection}`
+            : 'arrow';
         return <Icon name={name} class={bem('right-icon')} />;
       }
     };
 
     return () => {
-      const { size, center, border, isLink, required } = props;
+      const { tag, size, center, border, isLink, required } = props;
       const clickable = props.clickable ?? isLink;
 
       const classes: Record<string, boolean | undefined> = {
         center,
-        required,
+        required: !!required,
         clickable,
         borderless: !border,
       };
@@ -144,7 +159,7 @@ export default defineComponent({
       }
 
       return (
-        <div
+        <tag
           class={bem(classes)}
           role={clickable ? 'button' : undefined}
           tabindex={clickable ? 0 : undefined}
@@ -155,7 +170,7 @@ export default defineComponent({
           {renderValue()}
           {renderRightIcon()}
           {slots.extra?.()}
-        </div>
+        </tag>
       );
     };
   },

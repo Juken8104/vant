@@ -1,14 +1,14 @@
-import { join } from 'path';
-import { existsSync, readdirSync } from 'fs-extra';
-import { SRC_DIR, SITE_MOBILE_SHARED_FILE } from '../common/constant';
+import { join } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
+import { SRC_DIR } from '../common/constant.js';
 import {
   pascalize,
   removeExt,
   decamelize,
   getVantConfig,
-  smartOutputFile,
   normalizePath,
-} from '../common';
+} from '../common/index.js';
+import { CSS_LANG } from '../common/css.js';
 
 type DemoItem = {
   name: string;
@@ -38,7 +38,7 @@ function genConfig(demos: DemoItem[]) {
   function demoFilter(nav: any[]) {
     return nav.filter((group) => {
       group.items = group.items.filter((item: any) =>
-        demoNames.includes(item.path)
+        demoNames.includes(item.path),
       );
       return group.items.length;
     });
@@ -67,7 +67,7 @@ function genCode(components: string[]) {
     }))
     .filter((item) => existsSync(item.path));
 
-  return `import './package-style.less';
+  return `import 'package-style.${CSS_LANG}';
 ${genImports(demos)}
 
 ${genExports(demos)}
@@ -79,5 +79,5 @@ export function genSiteMobileShared() {
   const dirs = readdirSync(SRC_DIR);
   const code = genCode(dirs);
 
-  smartOutputFile(SITE_MOBILE_SHARED_FILE, code);
+  return code;
 }

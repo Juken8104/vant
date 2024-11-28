@@ -1,13 +1,14 @@
 import {
   ref,
-  Slot,
   watch,
   computed,
   Teleport,
-  PropType,
   Transition,
-  TeleportProps,
   defineComponent,
+  type Slot,
+  type PropType,
+  type TeleportProps,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
@@ -19,6 +20,8 @@ import {
   makeNumericProp,
   stopPropagation,
   createNamespace,
+  HAPTICS_FEEDBACK,
+  type Numeric,
 } from '../utils';
 
 // Composables
@@ -32,37 +35,53 @@ const [name, bem] = createNamespace('number-keyboard');
 export type NumberKeyboardTheme = 'default' | 'custom';
 
 type KeyConfig = {
-  text?: number | string;
+  text?: Numeric;
   type?: KeyType;
   color?: string;
   wider?: boolean;
 };
 
+export const numberKeyboardProps = {
+  show: Boolean,
+  title: String,
+  theme: makeStringProp<NumberKeyboardTheme>('default'),
+  zIndex: numericProp,
+  teleport: [String, Object] as PropType<TeleportProps['to']>,
+  maxlength: makeNumericProp(Infinity),
+  modelValue: makeStringProp(''),
+  transition: truthProp,
+  blurOnClose: truthProp,
+  showDeleteKey: truthProp,
+  randomKeyOrder: Boolean,
+  closeButtonText: String,
+  deleteButtonText: String,
+  closeButtonLoading: Boolean,
+  hideOnClickOutside: truthProp,
+  safeAreaInsetBottom: truthProp,
+  extraKey: {
+    type: [String, Array] as PropType<string | string[]>,
+    default: '',
+  },
+};
+
+export type NumberKeyboardProps = ExtractPropTypes<typeof numberKeyboardProps>;
+
+function shuffle(array: unknown[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
+  }
+  return array;
+}
+
 export default defineComponent({
   name,
 
-  props: {
-    show: Boolean,
-    title: String,
-    theme: makeStringProp<NumberKeyboardTheme>('default'),
-    zIndex: numericProp,
-    teleport: [String, Object] as PropType<TeleportProps['to']>,
-    maxlength: makeNumericProp(Infinity),
-    modelValue: makeStringProp(''),
-    transition: truthProp,
-    blurOnClose: truthProp,
-    showDeleteKey: truthProp,
-    randomKeyOrder: Boolean,
-    closeButtonText: String,
-    deleteButtonText: String,
-    closeButtonLoading: Boolean,
-    hideOnClickOutside: truthProp,
-    safeAreaInsetBottom: truthProp,
-    extraKey: {
-      type: [String, Array] as PropType<string | string[]>,
-      default: '',
-    },
-  },
+  inheritAttrs: false,
+
+  props: numberKeyboardProps,
 
   emits: [
     'show',
@@ -74,7 +93,7 @@ export default defineComponent({
     'update:modelValue',
   ],
 
-  setup(props, { emit, slots }) {
+  setup(props, { emit, slots, attrs }) {
     const root = ref<HTMLElement>();
 
     const genBasicKeys = () => {
@@ -83,7 +102,7 @@ export default defineComponent({
         .map((_, i) => ({ text: i + 1 }));
 
       if (props.randomKeyOrder) {
-        keys.sort(() => (Math.random() > 0.5 ? 1 : -1));
+        shuffle(keys);
       }
 
       return keys;
@@ -104,16 +123,18 @@ export default defineComponent({
       const { extraKey } = props;
       const extraKeys = Array.isArray(extraKey) ? extraKey : [extraKey];
 
-      if (extraKeys.length === 1) {
+      if (extraKeys.length === 0) {
+        keys.push({ text: 0, wider: true });
+      } else if (extraKeys.length === 1) {
         keys.push(
           { text: 0, wider: true },
-          { text: extraKeys[0], type: 'extra' }
+          { text: extraKeys[0], type: 'extra' },
         );
       } else if (extraKeys.length === 2) {
         keys.push(
           { text: extraKeys[0], type: 'extra' },
           { text: 0 },
-          { text: extraKeys[1], type: 'extra' }
+          { text: extraKeys[1], type: 'extra' },
         );
       }
 
@@ -121,7 +142,7 @@ export default defineComponent({
     };
 
     const keys = computed(() =>
-      props.theme === 'custom' ? genCustomKeys() : genDefaultKeys()
+      props.theme === 'custom' ? genCustomKeys() : genDefaultKeys(),
     );
 
     const onBlur = () => {
@@ -155,7 +176,7 @@ export default defineComponent({
         emit('update:modelValue', value.slice(0, value.length - 1));
       } else if (type === 'close') {
         onClose();
-      } else if (value.length < props.maxlength) {
+      } else if (value.length < +props.maxlength) {
         emit('input', text);
         emit('update:modelValue', value + text);
       }
@@ -176,7 +197,11 @@ export default defineComponent({
           {leftSlot && <span class={bem('title-left')}>{leftSlot()}</span>}
           {title && <h2 class={bem('title')}>{title}</h2>}
           {showClose && (
-            <button type="button" class={bem('close')} onClick={onClose}>
+            <button
+              type="button"
+              class={[bem('close'), HAPTICS_FEEDBACK]}
+              onClick={onClose}
+            >
               {closeButtonText}
             </button>
           )}
@@ -214,7 +239,7 @@ export default defineComponent({
           <div class={bem('sidebar')}>
             {props.showDeleteKey && (
               <NumberKeyboardKey
-                v-slots={{ delete: slots.delete }}
+                v-slots={{ default: slots.delete }}
                 large
                 text={props.deleteButtonText}
                 type="delete"
@@ -240,7 +265,7 @@ export default defineComponent({
         if (!props.transition) {
           emit(value ? 'show' : 'hide');
         }
-      }
+      },
     );
 
     if (props.hideOnClickOutside) {
@@ -259,10 +284,9 @@ export default defineComponent({
               unfit: !props.safeAreaInsetBottom,
               'with-title': !!Title,
             })}
-            onTouchstart={stopPropagation}
             onAnimationend={onAnimationEnd}
-            // @ts-ignore
-            onWebkitAnimationEnd={onAnimationEnd}
+            onTouchstartPassive={stopPropagation}
+            {...attrs}
           >
             {Title}
             <div class={bem('body')}>

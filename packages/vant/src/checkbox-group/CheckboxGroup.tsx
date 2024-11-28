@@ -1,20 +1,25 @@
 import {
   watch,
-  PropType,
-  InjectionKey,
   defineComponent,
-  ExtractPropTypes,
+  type PropType,
+  type InjectionKey,
+  type ExtractPropTypes,
 } from 'vue';
 
 // Utils
-import { numericProp, createNamespace, makeArrayProp } from '../utils';
+import {
+  numericProp,
+  makeArrayProp,
+  makeStringProp,
+  createNamespace,
+} from '../utils';
 
 // Composables
 import { useChildren, useCustomFieldValue } from '@vant/use';
 import { useExpose } from '../composables/use-expose';
 
 // Types
-import type { CheckerDirection } from '../checkbox/Checker';
+import type { CheckerShape, CheckerDirection } from '../checkbox/Checker';
 import type {
   CheckboxGroupExpose,
   CheckboxGroupProvide,
@@ -23,8 +28,9 @@ import type {
 
 const [name, bem] = createNamespace('checkbox-group');
 
-const props = {
+export const checkboxGroupProps = {
   max: numericProp,
+  shape: makeStringProp<CheckerShape>('round'),
   disabled: Boolean,
   iconSize: numericProp,
   direction: String as PropType<CheckerDirection>,
@@ -32,7 +38,7 @@ const props = {
   checkedColor: String,
 };
 
-export type CheckboxGroupProps = ExtractPropTypes<typeof props>;
+export type CheckboxGroupProps = ExtractPropTypes<typeof checkboxGroupProps>;
 
 export const CHECKBOX_GROUP_KEY: InjectionKey<CheckboxGroupProvide> =
   Symbol(name);
@@ -40,7 +46,7 @@ export const CHECKBOX_GROUP_KEY: InjectionKey<CheckboxGroupProvide> =
 export default defineComponent({
   name,
 
-  props,
+  props: checkboxGroupProps,
 
   emits: ['change', 'update:modelValue'],
 
@@ -72,7 +78,7 @@ export default defineComponent({
 
     watch(
       () => props.modelValue,
-      (value) => emit('change', value)
+      (value) => emit('change', value),
     );
 
     useExpose<CheckboxGroupExpose>({ toggleAll });

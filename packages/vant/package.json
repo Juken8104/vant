@@ -1,5 +1,5 @@
 {
-  "name": "vant",
+  "name": "@pintechs-org/vant",
   "version": "4.9.9",
   "description": "Mobile UI Components built on Vue",
   "main": "lib/vant.cjs.js",
@@ -26,7 +26,7 @@
     "open:coverage": "open test/coverage/lcov-report/index.html"
   },
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "http://nexus.pintechs.com/repository/npm-hosted/"
   },
   "repository": {
     "type": "git",
